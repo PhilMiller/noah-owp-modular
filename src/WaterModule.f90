@@ -31,16 +31,7 @@ contains
   type (energy_type)                   :: energy
 
 ! ------------------------ local variables ---------------------------
-  real    :: dtheta_max = 0.0   ! maximum value of theta change in all levels
-  real    :: totalwat   = 0.0   ! total soil water [mm]
-  real    :: tw0        = 0.0   ! initial total soil water [mm]
-  real    :: acsrf      = 0.0   ! accumulated surface runoff [mm]
-  real    :: acsub      = 0.0   ! accumulated drainage [mm]
-  real    :: acpcp      = 0.0   ! accumulated precipitation [mm]
-  real    :: errwat     = 0.0   ! accumulated error [mm]
-  logical :: done               ! logical check
   integer :: IZ 
-  real, dimension(1:levels%nsoil) :: smcold        !previous timestep smc
 !---------------------------------------------------------------------
 
     ! Below 4 computations moved from main level of noahmp_sflx in old model to WaterModule here
@@ -66,11 +57,6 @@ contains
        energy%frozen_ground = .true.
     END IF
  
-
-    ! total soil  water at last timestep, used for soil water budget check
-    tw0 = sum(domain%dzsnso(1:)*water%smc*1000.0) ! [mm]
-    smcold = 0.0
-
   !---------------------------------------------------------------------
   ! call the canopy water routines
   !--------------------------------------------------------------------- 
@@ -137,7 +123,6 @@ contains
       !---------------------------------------------------------------------
       ! call the soil water routines
       !---------------------------------------------------------------------
-      smcold = water%smc
       call SoilWater (domain, levels, options, parameters, water )   
 !!!!! did not include groundwater part
     ENDIF
@@ -153,15 +138,6 @@ contains
   !---------------------------------------------------------------------
   IF (options%opt_sub == 1) THEN
     water%runsub = water%runsub + water%snoflow      ! add glacier outflow to subsurface runoff [mm/s]
-    acsrf  = water%runsrf * domain%dt          ! accumulated surface runoff [mm]
-    acsub  = water%runsub * domain%dt          ! accumulated drainage [mm]
-    acpcp  = water%qinsur * domain%dt * 1000.0 ! accumulated precipitation [mm]
-   
-    dtheta_max = maxval(abs(water%smc-smcold))
-    !    if (dtheta_max .lt. 0.00001) done = .true.
-   
-    totalwat = sum(domain%dzsnso(1:levels%nsoil)*water%smc*1000.0)         ! total soil water [mm]
-    errwat = acpcp - acsrf - acsub - (totalwat - tw0)  ! accum error [mm]
   END IF
 
   END SUBROUTINE WaterMain   

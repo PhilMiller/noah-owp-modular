@@ -908,8 +908,8 @@ contains
     character (len=*), intent(in) :: name
     real, intent(inout) :: dest(:)
     integer :: bmi_status
-    real    :: mm2m = 0.001       ! unit conversion mm to m     
-    real    :: m2mm = 1000.       ! unit conversion m to mm
+    real, parameter    :: mm2m = 0.001       ! unit conversion mm to m
+    real, parameter    :: m2mm = 1000.       ! unit conversion m to mm
 
     associate(forcing    => this%model%forcing,   &
               water      => this%model%water,     &
@@ -1221,8 +1221,8 @@ contains
     character (len=*), intent(in) :: name
     real, intent(in) :: src(:)
     integer :: bmi_status
-    real    :: mm2m = 0.001       ! unit conversion mm to m     
-    real    :: m2mm = 1000.       ! unit conversion m to mm
+    real, parameter    :: mm2m = 0.001       ! unit conversion mm to m
+    real, parameter    :: m2mm = 1000.       ! unit conversion m to mm
 
     associate(forcing    => this%model%forcing,   &
               water      => this%model%water,     &

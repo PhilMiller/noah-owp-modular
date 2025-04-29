@@ -88,8 +88,8 @@ contains
        real              :: rain
     end type fdata
 
-    type(fdata) :: before = fdata("000000000000", -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36 ) 
-    type(fdata) :: after  = fdata("000000000000", -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36 ) 
+    type(fdata), SAVE :: before = fdata("000000000000", -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36 )
+    type(fdata), SAVE :: after  = fdata("000000000000", -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36, -1.E36 )
       
     integer :: idts
     integer :: idts2
@@ -113,7 +113,7 @@ contains
 
     ! Flag to tell us whether this is the first time this subroutine is called, in which case
     ! we need to seek forward to the data.
-    logical :: FirstTime = .TRUE.
+    logical, SAVE :: FirstTime = .TRUE.
 
     ! The format string for reading the forcing data:
     character(len=64), parameter :: read_format = "(I4.4, 4(1x,I2.2),8(F17.10))"

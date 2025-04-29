@@ -860,8 +860,8 @@ contains
 
     integer, intent (in) :: jdate
     integer, intent (out) :: day, month, year
-    integer :: y = 4716, j = 1401, m = 2, n = 12, r = 4, p = 1461
-    integer :: v = 3, u = 5, s = 153, w = 2, b = 274277, c = - 38
+    integer, parameter :: y = 4716, j = 1401, m = 2, n = 12, r = 4, p = 1461
+    integer, parameter :: v = 3, u = 5, s = 153, w = 2, b = 274277, c = - 38
     integer :: f, e, g, h
     f = jdate + j + (((4*jdate+b)/146097)*3) / 4 + c
     e = r * f + v
@@ -931,8 +931,10 @@ contains
     integer, intent (in) :: day, month, year
     double precision :: d, m, y
     integer :: a, b
-    double precision :: yr_corr = 0.0
- 
+    double precision :: yr_corr
+
+    yr_corr = 0.0
+
     d = day
     m = month
     y = year

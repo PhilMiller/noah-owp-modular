@@ -3,7 +3,6 @@ module LevelsType
 use NamelistRead, only: namelist_type
 
 implicit none
-save
 private
 
 type, public :: levels_type

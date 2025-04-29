@@ -4,7 +4,6 @@ use NamelistRead, only: namelist_type
 use ParametersRead
 
 implicit none
-save
 private
 
 type, public :: parameters_type

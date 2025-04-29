@@ -3,7 +3,6 @@ module EnergyType
 use NamelistRead, only: namelist_type
 
 implicit none
-save
 private
 
 type, public :: energy_type
