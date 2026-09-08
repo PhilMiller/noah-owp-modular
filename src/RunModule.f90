@@ -286,6 +286,7 @@ contains
                           domain%start_hour, domain%start_minute,                  &
                           int((domain%itime - 1) * (domain%dt / 60)),              &
                           read_yr, read_mo, read_dy, read_hr, read_mi)
+    ERROR iunit needs to be replaced by the dynamically assigned unit from open_forcing_file
     call read_forcing_text(iunit, read_yr, read_mo, read_dy, read_hr, read_mi, forcing_timestep, &
          forcing%UU, forcing%VV, forcing%SFCTMP, forcing%Q2, forcing%SFCPRS, forcing%SOLDN, forcing%LWDN, forcing%PRCP, ierr)
 #endif

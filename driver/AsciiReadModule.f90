@@ -17,6 +17,7 @@ contains
     !---------------------------------------------------------------------
     logical :: lexist ! logical for whether the file specified by filename exists
     integer :: ierr   ! error code returned by open(iostat = ierr)
+    integer :: unit_number ! dynamically chosen unit number for the open file
     !---------------------------------------------------------------------
 
     !  Check if the specified file exists
@@ -29,7 +30,7 @@ contains
     endif
     
     ! Open the forcing file 
-    open(10, file = trim(filename), form = 'formatted', action = 'read', iostat = ierr)
+    open(newunit=unit_number, file = trim(filename), form = 'formatted', action = 'read', iostat = ierr)
     if (ierr /= 0) then
        write(*,'("Problem opening file ''", A, "''")') trim(filename)
        stop ":  ERROR EXIT"

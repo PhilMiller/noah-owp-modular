@@ -88,6 +88,7 @@ contains
     ! Temporary var to hold the default, "namelist.input"
     ! or the value of namelist_file, if passed
     character(:), allocatable :: namelist_file_
+    integer :: namelist_unit
 
     integer            :: iz
     real               :: dt
@@ -228,27 +229,27 @@ contains
     !---------------------------------------------------------------------
     ierr = 0
     if( trim(namelist_file) .ne. '' ) then
-      open(30, file=namelist_file, form="formatted", status='old', iostat=ierr)
+      open(newunit=namelist_unit, file=namelist_file, form="formatted", status='old', iostat=ierr)
       if(ierr /= 0) then; write(*,'(A)') 'ERROR: user specified namelist file not found: '//trim(namelist_file); stop; end if
       !print*, 'Reading namelist: ', trim(namelist_file)
     else
-      open(30, file='./namelist.input', form="formatted", status='old', iostat=ierr)
+      open(newunit=namelist_unit, file='./namelist.input', form="formatted", status='old', iostat=ierr)
       if(ierr /= 0) then; write(*,'(A)') 'ERROR: default namelist file not found: ./namelist.input'; stop; end if
       !print*, 'No namelist filename supplied -- attempting to read namelist.input (default)'
     endif
 
-    read(30, timing, iostat=ierr)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
-    read(30, parameters, iostat=ierr)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
-    read(30, location, iostat=ierr)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
-    read(30, forcing, iostat=ierr)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
-    read(30, model_options, iostat=ierr)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
-    read(30, structure, iostat=ierr)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
+    read(namelist_unit, timing, iostat=ierr)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
+    read(namelist_unit, parameters, iostat=ierr)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
+    read(namelist_unit, location, iostat=ierr)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
+    read(namelist_unit, forcing, iostat=ierr)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
+    read(namelist_unit, model_options, iostat=ierr)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
+    read(namelist_unit, structure, iostat=ierr)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
 
     !---------------------------------------------------------------------
     !  Check model option validity, part 2
@@ -282,9 +283,9 @@ contains
     sh2o(1)   = realMissing
 
     ! read remaining group from namelist
-    read(30, initial_values)
-    if (ierr/=0) then; backspace(30); read(30,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if      
-    close(30)
+    read(namelist_unit, initial_values)
+    if (ierr/=0) then; backspace(namelist_unit); read(namelist_unit,fmt='(A)') line; write(*,'(A)') 'ERROR: invalid line in namelist: '//trim(line); stop; end if
+    close(namelist_unit)
     
     ! calculate total soil depth and populate array for depth of layer-bottom from soil surface
     if(dzsnso(1) /= realMissing) then

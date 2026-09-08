@@ -313,6 +313,7 @@ CONTAINS
     implicit none
     character(len=*), intent(in) :: param_dir
     character(len=*), intent(in) :: noahowp_table
+    integer :: noahowp_table_unit
     character(len=*), intent(in) :: DATASET_IDENTIFIER
     integer :: ierr
     integer :: IK,IM
@@ -445,9 +446,10 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr = 1
     end if
 
     if (ierr /= 0) then
@@ -455,16 +457,16 @@ CONTAINS
     endif
 
     if ( trim(DATASET_IDENTIFIER) == "USGS" ) then
-       read(15,usgs_veg_categories)
-       read(15,usgs_veg_parameters)
+       read(noahowp_table_unit,usgs_veg_categories)
+       read(noahowp_table_unit,usgs_veg_parameters)
     else if ( trim(DATASET_IDENTIFIER) == "MODIFIED_IGBP_MODIS_NOAH" ) then
-       read(15,modis_veg_categories)
-       read(15,modis_veg_parameters)
+       read(noahowp_table_unit,modis_veg_categories)
+       read(noahowp_table_unit,modis_veg_parameters)
     else
        write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
        call handle_err(ierr, 'ParametersRead.f90: read_veg_parameters: Unrecognized DATASET_IDENTIFIER in subroutine read_VEG_PARAMETERS')
     endif
-    close(15)
+    close(noahowp_table_unit)
 
        ISURBAN_TABLE   = ISURBAN
        ISWATER_TABLE   = ISWATER
@@ -581,6 +583,8 @@ CONTAINS
     integer             :: iLine               ! loop index
     character(len=256)  :: message
     logical             :: file_named
+    integer :: soil_table_unit
+    integer :: general_table_unit
 
 
     ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
@@ -614,9 +618,10 @@ CONTAINS
 !
     inquire( file=trim(param_dir)//'/'//trim(soil_table), exist=file_named )
     if ( file_named ) then
-      open(21, file=trim(param_dir)//'/'//trim(soil_table),form='formatted',status='old',iostat=ierr)
+      open(newunit=soil_table_unit, file=trim(param_dir)//'/'//trim(soil_table),form='formatted',status='old',iostat=ierr)
     else
-      open(21, form='formatted',status='old',iostat=ierr)
+       !open(21, form='formatted',status='old',iostat=ierr)
+       ierr=2001
     end if
 
     if (ierr/=0) then
@@ -625,75 +630,76 @@ CONTAINS
     end if
 
     do iLine = 1,100
-      READ (21,*) SLTYPE
+      READ (soil_table_unit,*) SLTYPE
       if (trim(SLTYPE) == trim(soil_class_name)) exit
     end do
 
-    READ (21,*) SLCATS
+    READ (soil_table_unit,*) SLCATS
 
     !WRITE( message , * ) 'SOIL TEXTURE CLASSIFICATION = ', TRIM ( SLTYPE ) , ' FOUND', SLCATS,' CATEGORIES'
     !print*, message
     !CALL wrf_message ( message )
 
     DO LC=1,SLCATS
-      READ (21,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),   &
+      READ (soil_table_unit,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),   &
                   SMCREF_TABLE(LC),PSISAT_TABLE(LC),DKSAT_TABLE(LC), DWSAT_TABLE(LC),   &
                   SMCWLT_TABLE(LC), QUARTZ_TABLE(LC),BVIC_TABLE(LC), AXAJ_TABLE(LC),    &
                   BXAJ_TABLE(LC),XXAJ_TABLE(LC),BDVIC_TABLE(LC),BBVIC_TABLE(LC),GDVIC_TABLE(LC)
     ENDDO
 
-    CLOSE (21)
+    CLOSE (soil_table_unit)
 
 !
 !-----READ IN GENERAL PARAMETERS FROM GENPARM.TBL
 !
     inquire( file=trim(param_dir)//'/'//trim(general_table), exist=file_named )
     if ( file_named ) then
-      open(22, file=trim(param_dir)//'/'//trim(general_table),form='formatted',status='old',iostat=ierr)
+      open(newunit=general_table_unit, file=trim(param_dir)//'/'//trim(general_table),form='formatted',status='old',iostat=ierr)
     else
-      open(22, form='formatted',status='old',iostat=ierr)
+       !open(22, form='formatted',status='old',iostat=ierr)
+       ierr=1
     end if
 
     if (ierr /= 0) then
       call handle_err(ierr, 'ParametersRead.f90: read_soil_parameters: failure opening GENPARM.TBL')
     end if
 
-    read (22,*)
-    read (22,*)
-    read (22,*) NUM_SLOPE
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*) NUM_SLOPE
 
     do LC=1,NUM_SLOPE
-       read (22,*) SLOPE_TABLE(LC)
+       read (general_table_unit,*) SLOPE_TABLE(LC)
     end do
 
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*) CSOIL_TABLE
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*) REFDK_TABLE
-    read (22,*)
-    read (22,*) REFKDT_TABLE
-    read (22,*)
-    read (22,*) FRZK_TABLE
-    read (22,*)
-    read (22,*) ZBOT_TABLE
-    read (22,*)
-    read (22,*) CZIL_TABLE
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*)
-    read (22,*) Z0_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*) CSOIL_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*) REFDK_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*) REFKDT_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*) FRZK_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*) ZBOT_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*) CZIL_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*) Z0_TABLE
 
-    close (22)
+    close (general_table_unit)
 
   END SUBROUTINE read_soil_parameters
 
@@ -704,6 +710,7 @@ CONTAINS
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
     logical                      :: file_named
+    integer :: noahowp_table_unit
 
     real :: ALBICE(MBAND),ALBLAK(MBAND),OMEGAS(MBAND),BETADS,BETAIS,EG(2)
     real :: ALBSAT_VIS(MSC)
@@ -725,17 +732,18 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr=1
     end if
 
     if (ierr /= 0) then
        call handle_err(ierr, 'ParametersRead.f90: read_rad_parameters: Cannot find file MPTABLE.TBL')
     endif
 
-    read(15,rad_parameters)
-    close(15)
+    read(noahowp_table_unit,rad_parameters)
+    close(noahowp_table_unit)
 
     ALBSAT_TABLE(:,1) = ALBSAT_VIS ! saturated soil albedos: 1=vis, 2=nir
     ALBSAT_TABLE(:,2) = ALBSAT_NIR ! saturated soil albedos: 1=vis, 2=nir
@@ -756,6 +764,7 @@ CONTAINS
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
     logical                      :: file_named
+    integer :: noahowp_table_unit
 
     real :: CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SNOW_RET_FAC,SNOW_EMIS,&
             SWEMX,TAU0,GRAIN_GROWTH,EXTRA_GROWTH,DIRT_SOOT,&
@@ -794,17 +803,18 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr=1
     end if
 
     if (ierr /= 0) then
        call handle_err(ierr, 'ParametersRead.f90: read_global_parameters: Cannot find file MPTABLE.TBL')
     endif
 
-    read(15,global_parameters)
-    close(15)
+    read(noahowp_table_unit,global_parameters)
+    close(noahowp_table_unit)
 
            CO2_TABLE     = CO2
             O2_TABLE     = O2
@@ -837,6 +847,7 @@ CONTAINS
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
     logical                      :: file_named
+    integer :: noahowp_table_unit
 
     integer                   :: DEFAULT_CROP
     integer, dimension(NCROP) :: PLTDAY
@@ -974,17 +985,18 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr=1
     end if
 
     if (ierr /= 0) then
        call handle_err(ierr, 'ParametersRead.f90: read_crop_parameters: Cannot find file MPTABLE.TBL')
     endif
 
-    read(15,crop_parameters)
-    close(15)
+    read(noahowp_table_unit,crop_parameters)
+    close(noahowp_table_unit)
 
     DEFAULT_CROP_TABLE      = DEFAULT_CROP
           PLTDAY_TABLE      = PLTDAY
@@ -1132,6 +1144,7 @@ CONTAINS
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
     logical                      :: file_named
+    integer :: noahowp_table_unit
 
     real    :: IRR_FRAC              ! irrigation Fraction
     integer :: IRR_HAR               ! number of days before harvest date to stop irrigation
@@ -1158,17 +1171,18 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr=1
     end if
 
     if (ierr /= 0) then
        call handle_err(ierr, 'ParametersRead.f90: read_irrigation_parameters: Cannot find file MPTABLE.TBL')
     endif
 
-    read(15,irrigation_parameters)
-    close(15)
+    read(noahowp_table_unit,irrigation_parameters)
+    close(noahowp_table_unit)
 
     IRR_FRAC_TABLE   = IRR_FRAC    ! irrigation Fraction
     IRR_HAR_TABLE    = IRR_HAR     ! number of days before harvest date to stop irrigation
@@ -1188,6 +1202,7 @@ CONTAINS
     character(len=*), intent(in)    :: noahowp_table
     integer                         :: ierr
     logical                         :: file_named
+    integer :: noahowp_table_unit
     real, dimension(MAX_SOILTYP)    :: TDSMC_FAC
     integer, dimension(MAX_SOILTYP) :: TD_DEPTH
     real, dimension(MAX_SOILTYP)    :: TD_DC
@@ -1218,15 +1233,16 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr=1
     end if
     if (ierr /= 0) then
        call handle_err(ierr, 'ParametersRead.f90: read_tiledrain_parameters: Cannot find file MPTABLE.TBL')
     endif
-    read(15,tiledrain_parameters)
-    close(15)
+    read(noahowp_table_unit,tiledrain_parameters)
+    close(noahowp_table_unit)
     TDSMCFAC_TABLE           = TDSMC_FAC
     TD_DEPTH_TABLE           = TD_DEPTH
     DRAIN_LAYER_OPT_TABLE    = DRAIN_LAYER_OPT
@@ -1249,6 +1265,7 @@ CONTAINS
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
     logical                      :: file_named
+    integer :: noahowp_table_unit
 
     namelist / optional_parameters /                                      &
                sr2006_theta_1500t_a, sr2006_theta_1500t_b, sr2006_theta_1500t_c, &
@@ -1271,17 +1288,18 @@ CONTAINS
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
-      open(15, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
+      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
     else
-      open(15, status='old', form='formatted', action='read', iostat=ierr)
+       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
+       ierr=1
     end if
 
     if (ierr /= 0) then
        call handle_err(ierr, 'ParametersRead.f90: read_optional_parameters: Cannot find file MPTABLE.TBL')
     endif
 
-    read(15,optional_parameters)
-    close(15)
+    read(noahowp_table_unit,optional_parameters)
+    close(noahowp_table_unit)
 
   END SUBROUTINE read_optional_parameters
 
