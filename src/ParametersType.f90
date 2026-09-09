@@ -206,17 +206,35 @@ contains
     integer                          :: ix
     character(len=50)                :: dataset_identifier
     type(parameters_table_type), allocatable :: tbl   ! local: not shared between instances
+    integer                          :: noahowp_table_unit
+    integer                          :: ierr
+    logical                          :: file_named
 
     allocate(tbl)
 
+    ! MPTABLE.TBL supplies the veg, radiation and global parameters. Open it
+    ! once here and share the unit, rather than reopening it in each reader.
+    inquire( file=trim(namelist%parameter_dir)//'/'//trim(namelist%noahowp_table), exist=file_named )
+    if ( file_named ) then
+      open(newunit=noahowp_table_unit, file=trim(namelist%parameter_dir)//'/'//trim(namelist%noahowp_table), &
+           status='old', form='formatted', action='read', iostat=ierr)
+    else
+      ierr = 1
+    end if
+    if (ierr /= 0) then
+      call handle_err(ierr, 'ParametersType.f90: paramRead: Cannot find file MPTABLE.TBL')
+    endif
+
     !dataset_identifier = "MODIFIED_IGBP_MODIS_NOAH"   ! This can be in namelist
-    !call read_veg_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table, dataset_identifier)
+    !call read_veg_parameters(tbl, noahowp_table_unit, dataset_identifier)
     call read_soil_parameters(tbl, namelist%parameter_dir, namelist%soil_table, namelist%general_table, namelist%soil_class_name)
-    call read_veg_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table, namelist%veg_class_name)
+    call read_veg_parameters(tbl, noahowp_table_unit, namelist%veg_class_name)
     !call read_soil_parameters(tbl, namelist%parameter_dir, namelist%soil_table, namelist%general_table)
 
-    call read_rad_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table)
-    call read_global_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table)
+    call read_rad_parameters(tbl, noahowp_table_unit)
+    call read_global_parameters(tbl, noahowp_table_unit)
+
+    close(noahowp_table_unit)
 
 !---------------------------------------------------------------------
 !  transfer to structure

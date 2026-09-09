@@ -206,6 +206,24 @@ if(BUILD_TESTING)
     noahowp_apply_fortran_flags(noahowp_datetime_test)
 
     add_test(NAME noahowp_datetime_test COMMAND noahowp_datetime_test)
+
+    # Exercises parameters_type%paramRead against the TBL files in
+    # parameters/. Needs only the parameter-reading modules, so like the
+    # datetime test it builds and runs without NetCDF.
+    add_executable(noahowp_parameters_test
+        test/parameters_test.f90
+        src/ErrorCheckModule.f90
+        src/NamelistRead.f90
+        src/ParametersRead.f90
+        src/ParametersType.f90)
+    set_target_properties(noahowp_parameters_test PROPERTIES
+        Fortran_MODULE_DIRECTORY "${_noahowp_modroot}/noahowp_parameters_test")
+    noahowp_apply_fortran_flags(noahowp_parameters_test)
+
+    # The parameter directory is passed explicitly so the test does not depend
+    # on the working directory it is run from.
+    add_test(NAME noahowp_parameters_test
+        COMMAND noahowp_parameters_test "${CMAKE_CURRENT_SOURCE_DIR}/parameters")
 endif()
 
 # ---- Install -----------------------------------------------------------------

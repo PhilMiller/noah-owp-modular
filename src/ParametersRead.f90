@@ -321,16 +321,12 @@ MODULE ParametersRead
 
 CONTAINS
 
-  SUBROUTINE read_veg_parameters(tbl, param_dir, noahowp_table, DATASET_IDENTIFIER)
+  SUBROUTINE read_veg_parameters(tbl, noahowp_table_unit, DATASET_IDENTIFIER)
     implicit none
     type(parameters_table_type), intent(inout) :: tbl
-    character(len=*), intent(in) :: param_dir
-    character(len=*), intent(in) :: noahowp_table
-    integer :: noahowp_table_unit
+    integer, intent(in) :: noahowp_table_unit
     character(len=*), intent(in) :: DATASET_IDENTIFIER
-    integer :: ierr
     integer :: IK,IM
-    logical :: file_named
 
     integer :: NVEG
     character(len=256) :: VEG_DATASET_DESCRIPTION
@@ -457,17 +453,9 @@ CONTAINS
     tbl%LCZ_10_TABLE   = -99999
     tbl%LCZ_11_TABLE   = -99999
 
-    inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
-    if ( file_named ) then
-      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
-    else
-       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
-       ierr = 1
-    end if
-
-    if (ierr /= 0) then
-       call handle_err(ierr, "ParametersRead.f90: read_veg_parameters: Cannot find file MPTABLE.TBL")
-    endif
+    ! MPTABLE.TBL is opened once by the caller and shared by the routines
+    ! that read it; rewind so this routine does not depend on call order.
+    rewind(noahowp_table_unit)
 
     if ( trim(DATASET_IDENTIFIER) == "USGS" ) then
        read(noahowp_table_unit,usgs_veg_categories)
@@ -477,9 +465,8 @@ CONTAINS
        read(noahowp_table_unit,modis_veg_parameters)
     else
        write(*,'("WARNING: DATASET_IDENTIFIER = ''", A, "''")') trim(DATASET_IDENTIFIER)
-       call handle_err(ierr, 'ParametersRead.f90: read_veg_parameters: Unrecognized DATASET_IDENTIFIER in subroutine read_VEG_PARAMETERS')
+       call handle_err(1, 'ParametersRead.f90: read_veg_parameters: Unrecognized DATASET_IDENTIFIER in subroutine read_VEG_PARAMETERS')
     endif
-    close(noahowp_table_unit)
 
        tbl%ISURBAN_TABLE   = ISURBAN
        tbl%ISWATER_TABLE   = ISWATER
@@ -718,14 +705,10 @@ CONTAINS
   END SUBROUTINE read_soil_parameters
 
 
-  SUBROUTINE read_rad_parameters(tbl, param_dir, noahowp_table)
+  SUBROUTINE read_rad_parameters(tbl, noahowp_table_unit)
     implicit none
     type(parameters_table_type), intent(inout) :: tbl
-    character(len=*), intent(in) :: param_dir
-    character(len=*), intent(in) :: noahowp_table
-    integer                      :: ierr
-    logical                      :: file_named
-    integer :: noahowp_table_unit
+    integer, intent(in) :: noahowp_table_unit
 
     real :: ALBICE(MBAND),ALBLAK(MBAND),OMEGAS(MBAND),BETADS,BETAIS,EG(2)
     real :: ALBSAT_VIS(MSC)
@@ -745,20 +728,11 @@ CONTAINS
     tbl%BETAIS_TABLE     = -1.E36
     tbl%EG_TABLE         = -1.E36
 
-    inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
-    if ( file_named ) then
-      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
-    else
-       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
-       ierr=1
-    end if
-
-    if (ierr /= 0) then
-       call handle_err(ierr, 'ParametersRead.f90: read_rad_parameters: Cannot find file MPTABLE.TBL')
-    endif
+    ! MPTABLE.TBL is opened once by the caller and shared by the routines
+    ! that read it; rewind so this routine does not depend on call order.
+    rewind(noahowp_table_unit)
 
     read(noahowp_table_unit,rad_parameters)
-    close(noahowp_table_unit)
 
     tbl%ALBSAT_TABLE(:,1) = ALBSAT_VIS ! saturated soil albedos: 1=vis, 2=nir
     tbl%ALBSAT_TABLE(:,2) = ALBSAT_NIR ! saturated soil albedos: 1=vis, 2=nir
@@ -773,14 +747,10 @@ CONTAINS
 
   end subroutine read_rad_parameters
 
-  subroutine read_global_parameters(tbl, param_dir, noahowp_table)
+  subroutine read_global_parameters(tbl, noahowp_table_unit)
     implicit none
     type(parameters_table_type), intent(inout) :: tbl
-    character(len=*), intent(in) :: param_dir
-    character(len=*), intent(in) :: noahowp_table
-    integer                      :: ierr
-    logical                      :: file_named
-    integer :: noahowp_table_unit
+    integer, intent(in) :: noahowp_table_unit
 
     real :: CO2,O2,TIMEAN,FSATMX,Z0SNO,SSI,SNOW_RET_FAC,SNOW_EMIS,&
             SWEMX,TAU0,GRAIN_GROWTH,EXTRA_GROWTH,DIRT_SOOT,&
@@ -817,20 +787,11 @@ CONTAINS
     tbl%RSURF_SNOW_TABLE     = -1.E36
      tbl%RSURF_EXP_TABLE     = -1.E36
 
-    inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
-    if ( file_named ) then
-      open(newunit=noahowp_table_unit, file=trim(param_dir)//'/'//trim(noahowp_table), status='old', form='formatted', action='read', iostat=ierr)
-    else
-       !open(newunit=noahowp_table_unit, status='old', form='formatted', action='read', iostat=ierr)
-       ierr=1
-    end if
-
-    if (ierr /= 0) then
-       call handle_err(ierr, 'ParametersRead.f90: read_global_parameters: Cannot find file MPTABLE.TBL')
-    endif
+    ! MPTABLE.TBL is opened once by the caller and shared by the routines
+    ! that read it; rewind so this routine does not depend on call order.
+    rewind(noahowp_table_unit)
 
     read(noahowp_table_unit,global_parameters)
-    close(noahowp_table_unit)
 
            tbl%CO2_TABLE     = CO2
             tbl%O2_TABLE     = O2
