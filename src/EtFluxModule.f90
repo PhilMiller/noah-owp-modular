@@ -556,10 +556,8 @@ contains
     REAL :: CH2          !Surface exchange at 2m
 
     INTEGER :: ITER    !iteration index
-    INTEGER :: NITERB  !number of iterations for surface temperature
+    INTEGER, parameter :: NITERB = 5  !number of iterations for surface temperature
     REAL    :: MPE     !prevents overflow error if division by zero
-    DATA NITERB /5/
-    SAVE NITERB
     REAL :: T  !, TDC     !Kelvin to degree Celsius with limit -50 to +50
     ! -----------------------------------------------------------------
     
@@ -844,9 +842,7 @@ contains
 
     ! ------------------------ local variables ----------------------------------------------------
     INTEGER :: ITER     !iteration index
-    INTEGER :: NITER    !number of iterations
-    DATA NITER /3/
-    SAVE NITER
+    INTEGER, parameter :: NITER = 3    !number of iterations
 
     REAL :: RLB         !boundary layer resistance (s m2 / umol)
     REAL :: AB          !used in statement functions

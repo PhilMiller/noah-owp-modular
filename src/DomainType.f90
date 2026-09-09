@@ -4,7 +4,6 @@ use NamelistRead, only: namelist_type
 use DateTimeUtilsModule
 
 implicit none
-save
 private
 
 type, public :: domain_type
