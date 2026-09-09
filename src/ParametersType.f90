@@ -205,125 +205,128 @@ contains
     ! local variables
     integer                          :: ix
     character(len=50)                :: dataset_identifier
+    type(parameters_table_type), allocatable :: tbl   ! local: not shared between instances
+
+    allocate(tbl)
 
     !dataset_identifier = "MODIFIED_IGBP_MODIS_NOAH"   ! This can be in namelist
-    !call read_veg_parameters(namelist%parameter_dir, namelist%noahowp_table, dataset_identifier)
-    call read_soil_parameters(namelist%parameter_dir, namelist%soil_table, namelist%general_table, namelist%soil_class_name)
-    call read_veg_parameters(namelist%parameter_dir, namelist%noahowp_table, namelist%veg_class_name)
-    !call read_soil_parameters(namelist%parameter_dir, namelist%soil_table, namelist%general_table)
+    !call read_veg_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table, dataset_identifier)
+    call read_soil_parameters(tbl, namelist%parameter_dir, namelist%soil_table, namelist%general_table, namelist%soil_class_name)
+    call read_veg_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table, namelist%veg_class_name)
+    !call read_soil_parameters(tbl, namelist%parameter_dir, namelist%soil_table, namelist%general_table)
 
-    call read_rad_parameters(namelist%parameter_dir, namelist%noahowp_table)
-    call read_global_parameters(namelist%parameter_dir, namelist%noahowp_table)
+    call read_rad_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table)
+    call read_global_parameters(tbl, namelist%parameter_dir, namelist%noahowp_table)
 
 !---------------------------------------------------------------------
 !  transfer to structure
 !---------------------------------------------------------------------
 
-    this%bexp    = BEXP_TABLE(namelist%isltyp)
-    this%smcmax  = SMCMAX_TABLE(namelist%isltyp)
-    this%smcwlt  = SMCWLT_TABLE(namelist%isltyp)
-    this%smcref  = SMCREF_TABLE(namelist%isltyp)
-    this%dksat   = DKSAT_TABLE(namelist%isltyp)
-    this%dwsat   = DWSAT_TABLE(namelist%isltyp)
-    this%psisat  = PSISAT_TABLE(namelist%isltyp)
-    this%bvic    = BVIC_table(namelist%isltyp)
-    this%AXAJ    = AXAJ_table(namelist%isltyp)
-    this%BXAJ    = BXAJ_table(namelist%isltyp)
-    this%XXAJ    = XXAJ_table(namelist%isltyp)
-    this%BBVIC   = BBVIC_table(namelist%isltyp)
-    this%G       = GDVIC_table(namelist%isltyp)
-    this%QUARTZ  = QUARTZ_table(namelist%isltyp)
+    this%bexp    = tbl%BEXP_TABLE(namelist%isltyp)
+    this%smcmax  = tbl%SMCMAX_TABLE(namelist%isltyp)
+    this%smcwlt  = tbl%SMCWLT_TABLE(namelist%isltyp)
+    this%smcref  = tbl%SMCREF_TABLE(namelist%isltyp)
+    this%dksat   = tbl%DKSAT_TABLE(namelist%isltyp)
+    this%dwsat   = tbl%DWSAT_TABLE(namelist%isltyp)
+    this%psisat  = tbl%PSISAT_TABLE(namelist%isltyp)
+    this%bvic    = tbl%BVIC_table(namelist%isltyp)
+    this%AXAJ    = tbl%AXAJ_table(namelist%isltyp)
+    this%BXAJ    = tbl%BXAJ_table(namelist%isltyp)
+    this%XXAJ    = tbl%XXAJ_table(namelist%isltyp)
+    this%BBVIC   = tbl%BBVIC_table(namelist%isltyp)
+    this%G       = tbl%GDVIC_table(namelist%isltyp)
+    this%QUARTZ  = tbl%QUARTZ_table(namelist%isltyp)
 
     do ix = 1,12
-      this%LAIM(ix) = LAIM_TABLE(namelist%vegtyp, ix)
-      this%SAIM(ix) = SAIM_TABLE(namelist%vegtyp, ix)
+      this%LAIM(ix) = tbl%LAIM_TABLE(namelist%vegtyp, ix)
+      this%SAIM(ix) = tbl%SAIM_TABLE(namelist%vegtyp, ix)
     end do
 
-    this%CH2OP   = CH2OP_TABLE(namelist%vegtyp)
-    this%NROOT   = NROOT_TABLE(namelist%vegtyp)
-    this%HVT     = HVT_TABLE(namelist%vegtyp)
-    this%HVB     = HVB_TABLE(namelist%vegtyp)
-    this%TMIN    = TMIN_TABLE(namelist%vegtyp)
-    this%SHDFAC  = SHDFAC_TABLE(namelist%vegtyp) ! this used to be in VEGPARM.TBL, but now somewhere else for hrldas. this is temporarily in MPTABLE.TBL.
-    this%SHDMAX  = SHDFAC_TABLE(namelist%vegtyp)
-    this%Z0MVT   = Z0MVT_TABLE(namelist%vegtyp)
-    this%RC      = RC_TABLE(namelist%vegtyp)
-    this%XL      = XL_TABLE(namelist%vegtyp)
-    this%BP      = BP_TABLE(namelist%vegtyp)
-    this%FOLNMX  = FOLNMX_TABLE(namelist%vegtyp)
-    this%QE25    = QE25_TABLE(namelist%vegtyp)
-    this%VCMX25  = VCMX25_TABLE(namelist%vegtyp)
-    this%MP      = MP_TABLE(namelist%vegtyp)
-    this%RGL     = RGL_TABLE(namelist%vegtyp)
-    this%RSMIN   = RS_TABLE(namelist%vegtyp)
-    this%HS      = HS_TABLE(namelist%vegtyp)
-    this%AKC     = AKC_TABLE(namelist%vegtyp)
-    this%AKO     = AKO_TABLE(namelist%vegtyp)
-    this%AVCMX   = AVCMX_TABLE(namelist%vegtyp)
-    this%RSMAX   = RSMAX_TABLE(namelist%vegtyp)
-    this%CWP     = CWPVT_TABLE(namelist%vegtyp)
-    this%C3PSN   = C3PSN_TABLE(namelist%vegtyp)
-    this%DLEAF   = DLEAF_TABLE(namelist%vegtyp)
-    this%KC25    = KC25_TABLE(namelist%vegtyp)
-    this%KO25    = KO25_TABLE(namelist%vegtyp)
+    this%CH2OP   = tbl%CH2OP_TABLE(namelist%vegtyp)
+    this%NROOT   = tbl%NROOT_TABLE(namelist%vegtyp)
+    this%HVT     = tbl%HVT_TABLE(namelist%vegtyp)
+    this%HVB     = tbl%HVB_TABLE(namelist%vegtyp)
+    this%TMIN    = tbl%TMIN_TABLE(namelist%vegtyp)
+    this%SHDFAC  = tbl%SHDFAC_TABLE(namelist%vegtyp) ! this used to be in VEGPARM.TBL, but now somewhere else for hrldas. this is temporarily in MPTABLE.TBL.
+    this%SHDMAX  = tbl%SHDFAC_TABLE(namelist%vegtyp)
+    this%Z0MVT   = tbl%Z0MVT_TABLE(namelist%vegtyp)
+    this%RC      = tbl%RC_TABLE(namelist%vegtyp)
+    this%XL      = tbl%XL_TABLE(namelist%vegtyp)
+    this%BP      = tbl%BP_TABLE(namelist%vegtyp)
+    this%FOLNMX  = tbl%FOLNMX_TABLE(namelist%vegtyp)
+    this%QE25    = tbl%QE25_TABLE(namelist%vegtyp)
+    this%VCMX25  = tbl%VCMX25_TABLE(namelist%vegtyp)
+    this%MP      = tbl%MP_TABLE(namelist%vegtyp)
+    this%RGL     = tbl%RGL_TABLE(namelist%vegtyp)
+    this%RSMIN   = tbl%RS_TABLE(namelist%vegtyp)
+    this%HS      = tbl%HS_TABLE(namelist%vegtyp)
+    this%AKC     = tbl%AKC_TABLE(namelist%vegtyp)
+    this%AKO     = tbl%AKO_TABLE(namelist%vegtyp)
+    this%AVCMX   = tbl%AVCMX_TABLE(namelist%vegtyp)
+    this%RSMAX   = tbl%RSMAX_TABLE(namelist%vegtyp)
+    this%CWP     = tbl%CWPVT_TABLE(namelist%vegtyp)
+    this%C3PSN   = tbl%C3PSN_TABLE(namelist%vegtyp)
+    this%DLEAF   = tbl%DLEAF_TABLE(namelist%vegtyp)
+    this%KC25    = tbl%KC25_TABLE(namelist%vegtyp)
+    this%KO25    = tbl%KO25_TABLE(namelist%vegtyp)
 
-    this%RHOL(1) = RHOL_TABLE(namelist%vegtyp, 1)
-    this%RHOL(2) = RHOL_TABLE(namelist%vegtyp, 2)
-    this%RHOS(1) = RHOS_TABLE(namelist%vegtyp, 1)
-    this%RHOS(2) = RHOS_TABLE(namelist%vegtyp, 2)
-    this%TAUL(1) = TAUL_TABLE(namelist%vegtyp, 1)
-    this%TAUL(2) = TAUL_TABLE(namelist%vegtyp, 2)
-    this%TAUS(1) = TAUS_TABLE(namelist%vegtyp, 1)
-    this%TAUS(2) = TAUS_TABLE(namelist%vegtyp, 2)
+    this%RHOL(1) = tbl%RHOL_TABLE(namelist%vegtyp, 1)
+    this%RHOL(2) = tbl%RHOL_TABLE(namelist%vegtyp, 2)
+    this%RHOS(1) = tbl%RHOS_TABLE(namelist%vegtyp, 1)
+    this%RHOS(2) = tbl%RHOS_TABLE(namelist%vegtyp, 2)
+    this%TAUL(1) = tbl%TAUL_TABLE(namelist%vegtyp, 1)
+    this%TAUL(2) = tbl%TAUL_TABLE(namelist%vegtyp, 2)
+    this%TAUS(1) = tbl%TAUS_TABLE(namelist%vegtyp, 1)
+    this%TAUS(2) = tbl%TAUS_TABLE(namelist%vegtyp, 2)
 
-    this%refkdt       = REFKDT_TABLE
-    this%refdk        = REFDK_TABLE
+    this%refkdt       = tbl%REFKDT_TABLE
+    this%refdk        = tbl%REFDK_TABLE
     this%kdt          = this%refkdt * this%dksat(1) / this%refdk
-    this%csoil        = CSOIL_TABLE
-    this%Z0           = Z0_TABLE     ! bare soil roughness length (m). in GENPARM.TBL.  NOTE: This is hard-coded in hrldas version of noah-mp
-    this%CZIL         = CZIL_TABLE
-    this%ZBOT         = ZBOT_TABLE
+    this%csoil        = tbl%CSOIL_TABLE
+    this%Z0           = tbl%Z0_TABLE     ! bare soil roughness length (m). in GENPARM.TBL.  NOTE: This is hard-coded in hrldas version of noah-mp
+    this%CZIL         = tbl%CZIL_TABLE
+    this%ZBOT         = tbl%ZBOT_TABLE
     this%frzx         = 0.15 * (this%smcmax(1) / this%smcref(1)) * (0.412 / 0.468)
-    this%SSI          = SSI_TABLE
-    this%MFSNO        = MFSNO_TABLE(namelist%vegtyp)
-    this%Z0SNO        = Z0SNO_TABLE
-    this%SWEMX        = SWEMX_TABLE
-    this%TAU0         = TAU0_TABLE
-    this%GRAIN_GROWTH = GRAIN_GROWTH_TABLE
-    this%EXTRA_GROWTH = EXTRA_GROWTH_TABLE
-    this%DIRT_SOOT    = DIRT_SOOT_TABLE
-    this%BATS_COSZ    = BATS_COSZ_TABLE
-    this%BATS_VIS_NEW = BATS_VIS_NEW_TABLE
-    this%BATS_NIR_NEW = BATS_NIR_NEW_TABLE
-    this%BATS_VIS_AGE = BATS_VIS_AGE_TABLE
-    this%BATS_NIR_AGE = BATS_NIR_AGE_TABLE
-    this%BATS_VIS_DIR = BATS_VIS_DIR_TABLE
-    this%BATS_NIR_DIR = BATS_NIR_DIR_TABLE
-    this%RSURF_SNOW   = RSURF_SNOW_TABLE
-    this%RSURF_EXP    = RSURF_EXP_TABLE
+    this%SSI          = tbl%SSI_TABLE
+    this%MFSNO        = tbl%MFSNO_TABLE(namelist%vegtyp)
+    this%Z0SNO        = tbl%Z0SNO_TABLE
+    this%SWEMX        = tbl%SWEMX_TABLE
+    this%TAU0         = tbl%TAU0_TABLE
+    this%GRAIN_GROWTH = tbl%GRAIN_GROWTH_TABLE
+    this%EXTRA_GROWTH = tbl%EXTRA_GROWTH_TABLE
+    this%DIRT_SOOT    = tbl%DIRT_SOOT_TABLE
+    this%BATS_COSZ    = tbl%BATS_COSZ_TABLE
+    this%BATS_VIS_NEW = tbl%BATS_VIS_NEW_TABLE
+    this%BATS_NIR_NEW = tbl%BATS_NIR_NEW_TABLE
+    this%BATS_VIS_AGE = tbl%BATS_VIS_AGE_TABLE
+    this%BATS_NIR_AGE = tbl%BATS_NIR_AGE_TABLE
+    this%BATS_VIS_DIR = tbl%BATS_VIS_DIR_TABLE
+    this%BATS_NIR_DIR = tbl%BATS_NIR_DIR_TABLE
+    this%RSURF_SNOW   = tbl%RSURF_SNOW_TABLE
+    this%RSURF_EXP    = tbl%RSURF_EXP_TABLE
 
-    this%ALBSAT(1) = ALBSAT_TABLE(namelist%soilcolor, 1)
-    this%ALBSAT(2) = ALBSAT_TABLE(namelist%soilcolor, 2)
-    this%ALBDRY(1) = ALBDRY_TABLE(namelist%soilcolor, 1)
-    this%ALBDRY(2) = ALBDRY_TABLE(namelist%soilcolor, 2)
-    this%ALBICE               = ALBICE_TABLE
-    this%ALBLAK               = ALBLAK_TABLE
-    this%OMEGAS               = OMEGAS_TABLE
-    this%BETADS               = BETADS_TABLE
-    this%BETAIS               = BETAIS_TABLE
-    this%EG                   = EG_TABLE
-    this%slope   = SLOPE_TABLE(1)
+    this%ALBSAT(1) = tbl%ALBSAT_TABLE(namelist%soilcolor, 1)
+    this%ALBSAT(2) = tbl%ALBSAT_TABLE(namelist%soilcolor, 2)
+    this%ALBDRY(1) = tbl%ALBDRY_TABLE(namelist%soilcolor, 1)
+    this%ALBDRY(2) = tbl%ALBDRY_TABLE(namelist%soilcolor, 2)
+    this%ALBICE               = tbl%ALBICE_TABLE
+    this%ALBLAK               = tbl%ALBLAK_TABLE
+    this%OMEGAS               = tbl%OMEGAS_TABLE
+    this%BETADS               = tbl%BETADS_TABLE
+    this%BETAIS               = tbl%BETAIS_TABLE
+    this%EG                   = tbl%EG_TABLE
+    this%slope   = tbl%SLOPE_TABLE(1)
 
-    this%ISURBAN                   = ISURBAN_TABLE
-    this%ISWATER                   = ISWATER_TABLE
-    this%ISBARREN                  = ISBARREN_TABLE
-    this%ISICE                     = ISICE_TABLE
-    this%ISCROP                    = ISCROP_TABLE
-    this%EBLFOREST                 = EBLFOREST_TABLE
-    this%NATURAL                   = NATURAL_TABLE
-    this%LOW_DENSITY_RESIDENTIAL   = LCZ_1_TABLE  ! TO-DO: rename LOW_DENSITY_RESIDENTIAL -> LCZ_1
-    this%HIGH_DENSITY_RESIDENTIAL  = LCZ_2_TABLE  ! TO-DO: rename LOW_DENSITY_RESIDENTIAL -> LCZ_2
-    this%HIGH_INTENSITY_INDUSTRIAL = LCZ_3_TABLE  ! TO-DO: rename LOW_DENSITY_RESIDENTIAL -> LCZ_3
+    this%ISURBAN                   = tbl%ISURBAN_TABLE
+    this%ISWATER                   = tbl%ISWATER_TABLE
+    this%ISBARREN                  = tbl%ISBARREN_TABLE
+    this%ISICE                     = tbl%ISICE_TABLE
+    this%ISCROP                    = tbl%ISCROP_TABLE
+    this%EBLFOREST                 = tbl%EBLFOREST_TABLE
+    this%NATURAL                   = tbl%NATURAL_TABLE
+    this%LOW_DENSITY_RESIDENTIAL   = tbl%LCZ_1_TABLE  ! TO-DO: rename LOW_DENSITY_RESIDENTIAL -> LCZ_1
+    this%HIGH_DENSITY_RESIDENTIAL  = tbl%LCZ_2_TABLE  ! TO-DO: rename LOW_DENSITY_RESIDENTIAL -> LCZ_2
+    this%HIGH_INTENSITY_INDUSTRIAL = tbl%LCZ_3_TABLE  ! TO-DO: rename LOW_DENSITY_RESIDENTIAL -> LCZ_3
 
     this%urban_flag = .false.
     this%timean     = 10.5

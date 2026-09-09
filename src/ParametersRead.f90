@@ -17,151 +17,163 @@ MODULE ParametersRead
     integer, private, parameter :: NCROP = 5
     integer, private, parameter :: NSTAGE = 8
 
+! ---------------------------------------------------------------------
+!  Parameter tables read from the TBL files.
+!
+!  These are held in a derived type rather than in module variables so
+!  that concurrent paramRead() calls -- possibly reading different TBL
+!  files -- do not share mutable state.  One instance is populated by
+!  the read_*_parameters routines below and consumed by
+!  ParametersType::paramRead.
+! ---------------------------------------------------------------------
+
+  type, public :: parameters_table_type
+
 ! MPTABLE.TBL vegetation parameters
 
- integer, public  :: ISURBAN_TABLE
- integer, public  :: ISWATER_TABLE
- integer, public  :: ISBARREN_TABLE
- integer, public  :: ISICE_TABLE
- integer, public  :: ISCROP_TABLE
- integer, public  :: EBLFOREST_TABLE
- integer, public  :: NATURAL_TABLE
- integer, public  :: LCZ_1_TABLE
- integer, public  :: LCZ_2_TABLE
- integer, public  :: LCZ_3_TABLE
- integer, public  :: LCZ_4_TABLE
- integer, public  :: LCZ_5_TABLE
- integer, public  :: LCZ_6_TABLE
- integer, public  :: LCZ_7_TABLE
- integer, public  :: LCZ_8_TABLE
- integer, public  :: LCZ_9_TABLE
- integer, public  :: LCZ_10_TABLE
- integer, public  :: LCZ_11_TABLE
+ integer          :: ISURBAN_TABLE
+ integer          :: ISWATER_TABLE
+ integer          :: ISBARREN_TABLE
+ integer          :: ISICE_TABLE
+ integer          :: ISCROP_TABLE
+ integer          :: EBLFOREST_TABLE
+ integer          :: NATURAL_TABLE
+ integer          :: LCZ_1_TABLE
+ integer          :: LCZ_2_TABLE
+ integer          :: LCZ_3_TABLE
+ integer          :: LCZ_4_TABLE
+ integer          :: LCZ_5_TABLE
+ integer          :: LCZ_6_TABLE
+ integer          :: LCZ_7_TABLE
+ integer          :: LCZ_8_TABLE
+ integer          :: LCZ_9_TABLE
+ integer          :: LCZ_10_TABLE
+ integer          :: LCZ_11_TABLE
 
-    real, public :: CH2OP_TABLE(MVT)       !maximum intercepted h2o per unit lai+sai (mm)
-    real, public :: DLEAF_TABLE(MVT)       !characteristic leaf dimension (m)
-    real, public :: Z0MVT_TABLE(MVT)       !momentum roughness length (m)
-    real, public :: HVT_TABLE(MVT)         !top of canopy (m)
-    real, public :: HVB_TABLE(MVT)         !bottom of canopy (m)
-    real, public :: DEN_TABLE(MVT)         !tree density (no. of trunks per m2)
-    real, public :: RC_TABLE(MVT)          !tree crown radius (m)
-    real, public :: MFSNO_TABLE(MVT)       !snowmelt curve parameter ()
-    real, public :: SCFFAC_TABLE(MVT)      !snow cover factor (m) (replace original hard-coded 2.5*z0 in SCF formulation)
-    real, public :: SAIM_TABLE(MVT,12)     !monthly stem area index, one-sided
-    real, public :: LAIM_TABLE(MVT,12)     !monthly leaf area index, one-sided
-    real, public :: SLA_TABLE(MVT)         !single-side leaf area per Kg [m2/kg]
-    real, public :: DILEFC_TABLE(MVT)      !coeficient for leaf stress death [1/s]
-    real, public :: DILEFW_TABLE(MVT)      !coeficient for leaf stress death [1/s]
-    real, public :: FRAGR_TABLE(MVT)       !fraction of growth respiration  !original was 0.3
-    real, public :: LTOVRC_TABLE(MVT)      !leaf turnover [1/s]
+    real         :: CH2OP_TABLE(MVT)       !maximum intercepted h2o per unit lai+sai (mm)
+    real         :: DLEAF_TABLE(MVT)       !characteristic leaf dimension (m)
+    real         :: Z0MVT_TABLE(MVT)       !momentum roughness length (m)
+    real         :: HVT_TABLE(MVT)         !top of canopy (m)
+    real         :: HVB_TABLE(MVT)         !bottom of canopy (m)
+    real         :: DEN_TABLE(MVT)         !tree density (no. of trunks per m2)
+    real         :: RC_TABLE(MVT)          !tree crown radius (m)
+    real         :: MFSNO_TABLE(MVT)       !snowmelt curve parameter ()
+    real         :: SCFFAC_TABLE(MVT)      !snow cover factor (m) (replace original hard-coded 2.5*z0 in SCF formulation)
+    real         :: SAIM_TABLE(MVT,12)     !monthly stem area index, one-sided
+    real         :: LAIM_TABLE(MVT,12)     !monthly leaf area index, one-sided
+    real         :: SLA_TABLE(MVT)         !single-side leaf area per Kg [m2/kg]
+    real         :: DILEFC_TABLE(MVT)      !coeficient for leaf stress death [1/s]
+    real         :: DILEFW_TABLE(MVT)      !coeficient for leaf stress death [1/s]
+    real         :: FRAGR_TABLE(MVT)       !fraction of growth respiration  !original was 0.3
+    real         :: LTOVRC_TABLE(MVT)      !leaf turnover [1/s]
 
-    real, public :: C3PSN_TABLE(MVT)       !photosynthetic pathway: 0. = c4, 1. = c3
-    real, public :: KC25_TABLE(MVT)        !co2 michaelis-menten constant at 25c (pa)
-    real, public :: AKC_TABLE(MVT)         !q10 for kc25
-    real, public :: KO25_TABLE(MVT)        !o2 michaelis-menten constant at 25c (pa)
-    real, public :: AKO_TABLE(MVT)         !q10 for ko25
-    real, public :: VCMX25_TABLE(MVT)      !maximum rate of carboxylation at 25c (umol co2/m**2/s)
-    real, public :: AVCMX_TABLE(MVT)       !q10 for vcmx25
-    real, public :: BP_TABLE(MVT)          !minimum leaf conductance (umol/m**2/s)
-    real, public :: MP_TABLE(MVT)          !slope of conductance-to-photosynthesis relationship
-    real, public :: QE25_TABLE(MVT)        !quantum efficiency at 25c (umol co2 / umol photon)
-    real, public :: AQE_TABLE(MVT)         !q10 for qe25
-    real, public :: RMF25_TABLE(MVT)       !leaf maintenance respiration at 25c (umol co2/m**2/s)
-    real, public :: RMS25_TABLE(MVT)       !stem maintenance respiration at 25c (umol co2/kg bio/s)
-    real, public :: RMR25_TABLE(MVT)       !root maintenance respiration at 25c (umol co2/kg bio/s)
-    real, public :: ARM_TABLE(MVT)         !q10 for maintenance respiration
-    real, public :: FOLNMX_TABLE(MVT)      !foliage nitrogen concentration when f(n)=1 (%)
-    real, public :: TMIN_TABLE(MVT)        !minimum temperature for photosynthesis (k)
+    real         :: C3PSN_TABLE(MVT)       !photosynthetic pathway: 0. = c4, 1. = c3
+    real         :: KC25_TABLE(MVT)        !co2 michaelis-menten constant at 25c (pa)
+    real         :: AKC_TABLE(MVT)         !q10 for kc25
+    real         :: KO25_TABLE(MVT)        !o2 michaelis-menten constant at 25c (pa)
+    real         :: AKO_TABLE(MVT)         !q10 for ko25
+    real         :: VCMX25_TABLE(MVT)      !maximum rate of carboxylation at 25c (umol co2/m**2/s)
+    real         :: AVCMX_TABLE(MVT)       !q10 for vcmx25
+    real         :: BP_TABLE(MVT)          !minimum leaf conductance (umol/m**2/s)
+    real         :: MP_TABLE(MVT)          !slope of conductance-to-photosynthesis relationship
+    real         :: QE25_TABLE(MVT)        !quantum efficiency at 25c (umol co2 / umol photon)
+    real         :: AQE_TABLE(MVT)         !q10 for qe25
+    real         :: RMF25_TABLE(MVT)       !leaf maintenance respiration at 25c (umol co2/m**2/s)
+    real         :: RMS25_TABLE(MVT)       !stem maintenance respiration at 25c (umol co2/kg bio/s)
+    real         :: RMR25_TABLE(MVT)       !root maintenance respiration at 25c (umol co2/kg bio/s)
+    real         :: ARM_TABLE(MVT)         !q10 for maintenance respiration
+    real         :: FOLNMX_TABLE(MVT)      !foliage nitrogen concentration when f(n)=1 (%)
+    real         :: TMIN_TABLE(MVT)        !minimum temperature for photosynthesis (k)
 
-    real, public :: XL_TABLE(MVT)          !leaf/stem orientation index
-    real, public :: RHOL_TABLE(MVT,MBAND)  !leaf reflectance: 1=vis, 2=nir
-    real, public :: RHOS_TABLE(MVT,MBAND)  !stem reflectance: 1=vis, 2=nir
-    real, public :: TAUL_TABLE(MVT,MBAND)  !leaf transmittance: 1=vis, 2=nir
-    real, public :: TAUS_TABLE(MVT,MBAND)  !stem transmittance: 1=vis, 2=nir
+    real         :: XL_TABLE(MVT)          !leaf/stem orientation index
+    real         :: RHOL_TABLE(MVT,MBAND)  !leaf reflectance: 1=vis, 2=nir
+    real         :: RHOS_TABLE(MVT,MBAND)  !stem reflectance: 1=vis, 2=nir
+    real         :: TAUL_TABLE(MVT,MBAND)  !leaf transmittance: 1=vis, 2=nir
+    real         :: TAUS_TABLE(MVT,MBAND)  !stem transmittance: 1=vis, 2=nir
 
-    real, public :: MRP_TABLE(MVT)         !microbial respiration parameter (umol co2 /kg c/ s)
-    real, public :: CWPVT_TABLE(MVT)       !empirical canopy wind parameter
+    real         :: MRP_TABLE(MVT)         !microbial respiration parameter (umol co2 /kg c/ s)
+    real         :: CWPVT_TABLE(MVT)       !empirical canopy wind parameter
 
-    real, public :: WRRAT_TABLE(MVT)       !wood to non-wood ratio
-    real, public :: WDPOOL_TABLE(MVT)      !wood pool (switch 1 or 0) depending on woody or not [-]
-    real, public :: TDLEF_TABLE(MVT)       !characteristic T for leaf freezing [K]
+    real         :: WRRAT_TABLE(MVT)       !wood to non-wood ratio
+    real         :: WDPOOL_TABLE(MVT)      !wood pool (switch 1 or 0) depending on woody or not [-]
+    real         :: TDLEF_TABLE(MVT)       !characteristic T for leaf freezing [K]
 
-    real, public :: SHDFAC_TABLE(MVT)      !fraction of surface covered by vegetation (dimensionless, 0.0 to 1.0)
-    real, public :: NROOT_TABLE(MVT)       !number of soil layers with root present
-    real, public :: RGL_TABLE(MVT)         !Parameter used in radiation stress function
-    real, public :: RS_TABLE(MVT)          !Minimum stomatal resistance [s m-1]
-    real, public :: HS_TABLE(MVT)          !Parameter used in vapor pressure deficit function
-    real, public :: TOPT_TABLE(MVT)        !Optimum transpiration air temperature [K]
-    real, public :: RSMAX_TABLE(MVT)       !Maximal stomatal resistance [s m-1]
+    real         :: SHDFAC_TABLE(MVT)      !fraction of surface covered by vegetation (dimensionless, 0.0 to 1.0)
+    real         :: NROOT_TABLE(MVT)       !number of soil layers with root present
+    real         :: RGL_TABLE(MVT)         !Parameter used in radiation stress function
+    real         :: RS_TABLE(MVT)          !Minimum stomatal resistance [s m-1]
+    real         :: HS_TABLE(MVT)          !Parameter used in vapor pressure deficit function
+    real         :: TOPT_TABLE(MVT)        !Optimum transpiration air temperature [K]
+    real         :: RSMAX_TABLE(MVT)       !Maximal stomatal resistance [s m-1]
 
 ! SOILPARM.TBL parameters
 
- integer, public :: SLCATS
-    real, public :: BEXP_TABLE(MAX_SOILTYP)        !maximum intercepted h2o per unit lai+sai (mm)
-    real, public :: SMCDRY_TABLE(MAX_SOILTYP)      !characteristic leaf dimension (m)
-    real, public :: F1_TABLE(MAX_SOILTYP)          !momentum roughness length (m)
-    real, public :: SMCMAX_TABLE(MAX_SOILTYP)      !
-    real, public :: SMCREF_TABLE(MAX_SOILTYP)      !
-    real, public :: PSISAT_TABLE(MAX_SOILTYP)      !
-    real, public :: DKSAT_TABLE(MAX_SOILTYP)       !
-    real, public :: DWSAT_TABLE(MAX_SOILTYP)       !
-    real, public :: SMCWLT_TABLE(MAX_SOILTYP)      !
-    real, public :: QUARTZ_TABLE(MAX_SOILTYP)      !
-    real, public :: BVIC_TABLE(MAX_SOILTYP)        !VIC model infiltration parameter (-) for opt_run=6
-    real, public :: AXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Tension water distribution inflection parameter [-] for opt_run=7
-    real, public :: BXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Tension water distribution shape parameter [-] for opt_run=7
-    real, public :: XXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Free water distribution shape parameter [-] for opt_run=7
-    real, public :: BDVIC_TABLE(MAX_SOILTYP)       !VIC model infiltration parameter (-)
-    real, public :: GDVIC_TABLE(MAX_SOILTYP)       !mean capilary drive (m)
-    real, public :: BBVIC_TABLE(MAX_SOILTYP)       !heterogeniety parameter for DVIC infiltration [-]
+    real         :: BEXP_TABLE(MAX_SOILTYP)        !maximum intercepted h2o per unit lai+sai (mm)
+    real         :: SMCDRY_TABLE(MAX_SOILTYP)      !characteristic leaf dimension (m)
+    real         :: F1_TABLE(MAX_SOILTYP)          !momentum roughness length (m)
+    real         :: SMCMAX_TABLE(MAX_SOILTYP)      !
+    real         :: SMCREF_TABLE(MAX_SOILTYP)      !
+    real         :: PSISAT_TABLE(MAX_SOILTYP)      !
+    real         :: DKSAT_TABLE(MAX_SOILTYP)       !
+    real         :: DWSAT_TABLE(MAX_SOILTYP)       !
+    real         :: SMCWLT_TABLE(MAX_SOILTYP)      !
+    real         :: QUARTZ_TABLE(MAX_SOILTYP)      !
+    real         :: BVIC_TABLE(MAX_SOILTYP)        !VIC model infiltration parameter (-) for opt_run=6
+    real         :: AXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Tension water distribution inflection parameter [-] for opt_run=7
+    real         :: BXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Tension water distribution shape parameter [-] for opt_run=7
+    real         :: XXAJ_TABLE(MAX_SOILTYP)        !Xinanjiang: Free water distribution shape parameter [-] for opt_run=7
+    real         :: BDVIC_TABLE(MAX_SOILTYP)       !VIC model infiltration parameter (-)
+    real         :: GDVIC_TABLE(MAX_SOILTYP)       !mean capilary drive (m)
+    real         :: BBVIC_TABLE(MAX_SOILTYP)       !heterogeniety parameter for DVIC infiltration [-]
 
 ! GENPARM.TBL parameters
 
-    real, public :: SLOPE_TABLE(9)    !slope factor for soil drainage
-    real, public :: CSOIL_TABLE       !Soil heat capacity [J m-3 K-1]
-    real, public :: REFDK_TABLE       !Parameter in the surface runoff parameterization
-    real, public :: REFKDT_TABLE      !Parameter in the surface runoff parameterization
-    real, public :: FRZK_TABLE        !Frozen ground parameter
-    real, public :: ZBOT_TABLE        !Depth [m] of lower boundary soil temperature
-    real, public :: CZIL_TABLE        !Parameter used in the calculation of the roughness length for heat
-    real, public :: Z0_TABLE          !bare soil roughness length (m)
+    real         :: SLOPE_TABLE(9)    !slope factor for soil drainage
+    real         :: CSOIL_TABLE       !Soil heat capacity [J m-3 K-1]
+    real         :: REFDK_TABLE       !Parameter in the surface runoff parameterization
+    real         :: REFKDT_TABLE      !Parameter in the surface runoff parameterization
+    real         :: FRZK_TABLE        !Frozen ground parameter
+    real         :: ZBOT_TABLE        !Depth [m] of lower boundary soil temperature
+    real         :: CZIL_TABLE        !Parameter used in the calculation of the roughness length for heat
+    real         :: Z0_TABLE          !bare soil roughness length (m)
 
 ! MPTABLE.TBL radiation parameters
 
-    real, public :: ALBSAT_TABLE(MSC,MBAND)   !saturated soil albedos: 1=vis, 2=nir
-    real, public :: ALBDRY_TABLE(MSC,MBAND)   !dry soil albedos: 1=vis, 2=nir
-    real, public :: ALBICE_TABLE(MBAND)       !albedo land ice: 1=vis, 2=nir
-    real, public :: ALBLAK_TABLE(MBAND)       !albedo frozen lakes: 1=vis, 2=nir
-    real, public :: OMEGAS_TABLE(MBAND)       !two-stream parameter omega for snow
-    real, public :: BETADS_TABLE              !two-stream parameter betad for snow
-    real, public :: BETAIS_TABLE              !two-stream parameter betad for snow
-    real, public :: EG_TABLE(2)               !emissivity
+    real         :: ALBSAT_TABLE(MSC,MBAND)   !saturated soil albedos: 1=vis, 2=nir
+    real         :: ALBDRY_TABLE(MSC,MBAND)   !dry soil albedos: 1=vis, 2=nir
+    real         :: ALBICE_TABLE(MBAND)       !albedo land ice: 1=vis, 2=nir
+    real         :: ALBLAK_TABLE(MBAND)       !albedo frozen lakes: 1=vis, 2=nir
+    real         :: OMEGAS_TABLE(MBAND)       !two-stream parameter omega for snow
+    real         :: BETADS_TABLE              !two-stream parameter betad for snow
+    real         :: BETAIS_TABLE              !two-stream parameter betad for snow
+    real         :: EG_TABLE(2)               !emissivity
 
 ! MPTABLE.TBL global parameters
 
-    real, public :: CO2_TABLE            !co2 partial pressure
-    real, public :: O2_TABLE             !o2 partial pressure
-    real, public :: TIMEAN_TABLE         !gridcell mean topgraphic index (global mean)
-    real, public :: FSATMX_TABLE         !maximum surface saturated fraction (global mean)
-    real, public :: Z0SNO_TABLE          !snow surface roughness length (m) (0.002)
-    real, public :: SSI_TABLE            !liquid water holding capacity for snowpack (m3/m3) (0.03)
-    real, public :: SNOW_RET_FAC_TABLE   !snowpack water release timescale factor (1/s)
-    real, public :: SNOW_EMIS_TABLE      !snow emissivity
-    real, public :: SWEMX_TABLE          !new snow mass to fully cover old snow (mm)
-    real, public :: TAU0_TABLE           !tau0 from Yang97 eqn. 10a
-    real, public :: GRAIN_GROWTH_TABLE   !growth from vapor diffusion Yang97 eqn. 10b
-    real, public :: EXTRA_GROWTH_TABLE   !extra growth near freezing Yang97 eqn. 10c
-    real, public :: DIRT_SOOT_TABLE      !dirt and soot term Yang97 eqn. 10d
-    real, public :: BATS_COSZ_TABLE      !zenith angle snow albedo adjustment; b in Yang97 eqn. 15
-    real, public :: BATS_VIS_NEW_TABLE   !new snow visible albedo
-    real, public :: BATS_NIR_NEW_TABLE   !new snow NIR albedo
-    real, public :: BATS_VIS_AGE_TABLE   !age factor for diffuse visible snow albedo Yang97 eqn. 17
-    real, public :: BATS_NIR_AGE_TABLE   !age factor for diffuse NIR snow albedo Yang97 eqn. 18
-    real, public :: BATS_VIS_DIR_TABLE   !cosz factor for direct visible snow albedo Yang97 eqn. 15
-    real, public :: BATS_NIR_DIR_TABLE   !cosz factor for direct NIR snow albedo Yang97 eqn. 16
-    real, public :: RSURF_SNOW_TABLE     !surface resistance for snow(s/m)
-    real, public :: RSURF_EXP_TABLE      !exponent in the shape parameter for soil resistance option 1
+    real         :: CO2_TABLE            !co2 partial pressure
+    real         :: O2_TABLE             !o2 partial pressure
+    real         :: TIMEAN_TABLE         !gridcell mean topgraphic index (global mean)
+    real         :: FSATMX_TABLE         !maximum surface saturated fraction (global mean)
+    real         :: Z0SNO_TABLE          !snow surface roughness length (m) (0.002)
+    real         :: SSI_TABLE            !liquid water holding capacity for snowpack (m3/m3) (0.03)
+    real         :: SNOW_RET_FAC_TABLE   !snowpack water release timescale factor (1/s)
+    real         :: SNOW_EMIS_TABLE      !snow emissivity
+    real         :: SWEMX_TABLE          !new snow mass to fully cover old snow (mm)
+    real         :: TAU0_TABLE           !tau0 from Yang97 eqn. 10a
+    real         :: GRAIN_GROWTH_TABLE   !growth from vapor diffusion Yang97 eqn. 10b
+    real         :: EXTRA_GROWTH_TABLE   !extra growth near freezing Yang97 eqn. 10c
+    real         :: DIRT_SOOT_TABLE      !dirt and soot term Yang97 eqn. 10d
+    real         :: BATS_COSZ_TABLE      !zenith angle snow albedo adjustment; b in Yang97 eqn. 15
+    real         :: BATS_VIS_NEW_TABLE   !new snow visible albedo
+    real         :: BATS_NIR_NEW_TABLE   !new snow NIR albedo
+    real         :: BATS_VIS_AGE_TABLE   !age factor for diffuse visible snow albedo Yang97 eqn. 17
+    real         :: BATS_NIR_AGE_TABLE   !age factor for diffuse NIR snow albedo Yang97 eqn. 18
+    real         :: BATS_VIS_DIR_TABLE   !cosz factor for direct visible snow albedo Yang97 eqn. 15
+    real         :: BATS_NIR_DIR_TABLE   !cosz factor for direct NIR snow albedo Yang97 eqn. 16
+    real         :: RSURF_SNOW_TABLE     !surface resistance for snow(s/m)
+    real         :: RSURF_EXP_TABLE      !exponent in the shape parameter for soil resistance option 1
 
+  end type parameters_table_type
 ! MPTABLE.TBL irrigation parameters
 
     real :: IRR_FRAC_TABLE              ! irrigation Fraction
@@ -309,8 +321,9 @@ MODULE ParametersRead
 
 CONTAINS
 
-  SUBROUTINE read_veg_parameters(param_dir, noahowp_table, DATASET_IDENTIFIER)
+  SUBROUTINE read_veg_parameters(tbl, param_dir, noahowp_table, DATASET_IDENTIFIER)
     implicit none
+    type(parameters_table_type), intent(inout) :: tbl
     character(len=*), intent(in) :: param_dir
     character(len=*), intent(in) :: noahowp_table
     integer :: noahowp_table_unit
@@ -375,74 +388,74 @@ CONTAINS
          RHOL_VIS, RHOL_NIR, RHOS_VIS, RHOS_NIR, TAUL_VIS, TAUL_NIR, TAUS_VIS, TAUS_NIR, SLAREA, EPS1, EPS2, EPS3, EPS4, EPS5
 
     ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-    CH2OP_TABLE  = -1.E36
-    DLEAF_TABLE  = -1.E36
-    Z0MVT_TABLE  = -1.E36
-    HVT_TABLE    = -1.E36
-    HVB_TABLE    = -1.E36
-    DEN_TABLE    = -1.E36
-    RC_TABLE     = -1.E36
-    MFSNO_TABLE  = -1.E36
-    SCFFAC_TABLE = -1.E36
-    RHOL_TABLE   = -1.E36
-    RHOS_TABLE   = -1.E36
-    TAUL_TABLE   = -1.E36
-    TAUS_TABLE   = -1.E36
-    XL_TABLE     = -1.E36
-    CWPVT_TABLE  = -1.E36
-    C3PSN_TABLE  = -1.E36
-    KC25_TABLE   = -1.E36
-    AKC_TABLE    = -1.E36
-    KO25_TABLE   = -1.E36
-    AKO_TABLE    = -1.E36
-    AVCMX_TABLE  = -1.E36
-    AQE_TABLE    = -1.E36
-    LTOVRC_TABLE = -1.E36
-    DILEFC_TABLE = -1.E36
-    DILEFW_TABLE = -1.E36
-    RMF25_TABLE  = -1.E36
-    SLA_TABLE    = -1.E36
-    FRAGR_TABLE  = -1.E36
-    TMIN_TABLE   = -1.E36
-    VCMX25_TABLE = -1.E36
-    TDLEF_TABLE  = -1.E36
-    BP_TABLE     = -1.E36
-    MP_TABLE     = -1.E36
-    QE25_TABLE   = -1.E36
-    RMS25_TABLE  = -1.E36
-    RMR25_TABLE  = -1.E36
-    ARM_TABLE    = -1.E36
-    FOLNMX_TABLE = -1.E36
-    WDPOOL_TABLE = -1.E36
-    WRRAT_TABLE  = -1.E36
-    MRP_TABLE    = -1.E36
-    SAIM_TABLE   = -1.E36
-    LAIM_TABLE   = -1.E36
-    SHDFAC_TABLE = -1.E36
-    NROOT_TABLE  = -1.E36
-    RGL_TABLE    = -1.E36
-    RS_TABLE     = -1.E36
-    HS_TABLE     = -1.E36
-    TOPT_TABLE   = -1.E36
-    RSMAX_TABLE  = -1.E36
-    ISURBAN_TABLE      = -99999
-    ISWATER_TABLE      = -99999
-    ISBARREN_TABLE     = -99999
-    ISICE_TABLE        = -99999
-    ISCROP_TABLE       = -99999
-    EBLFOREST_TABLE    = -99999
-    NATURAL_TABLE      = -99999
-    LCZ_1_TABLE   = -99999
-    LCZ_2_TABLE   = -99999
-    LCZ_3_TABLE   = -99999
-    LCZ_4_TABLE   = -99999
-    LCZ_5_TABLE   = -99999
-    LCZ_6_TABLE   = -99999
-    LCZ_7_TABLE   = -99999
-    LCZ_8_TABLE   = -99999
-    LCZ_9_TABLE   = -99999
-    LCZ_10_TABLE   = -99999
-    LCZ_11_TABLE   = -99999
+    tbl%CH2OP_TABLE  = -1.E36
+    tbl%DLEAF_TABLE  = -1.E36
+    tbl%Z0MVT_TABLE  = -1.E36
+    tbl%HVT_TABLE    = -1.E36
+    tbl%HVB_TABLE    = -1.E36
+    tbl%DEN_TABLE    = -1.E36
+    tbl%RC_TABLE     = -1.E36
+    tbl%MFSNO_TABLE  = -1.E36
+    tbl%SCFFAC_TABLE = -1.E36
+    tbl%RHOL_TABLE   = -1.E36
+    tbl%RHOS_TABLE   = -1.E36
+    tbl%TAUL_TABLE   = -1.E36
+    tbl%TAUS_TABLE   = -1.E36
+    tbl%XL_TABLE     = -1.E36
+    tbl%CWPVT_TABLE  = -1.E36
+    tbl%C3PSN_TABLE  = -1.E36
+    tbl%KC25_TABLE   = -1.E36
+    tbl%AKC_TABLE    = -1.E36
+    tbl%KO25_TABLE   = -1.E36
+    tbl%AKO_TABLE    = -1.E36
+    tbl%AVCMX_TABLE  = -1.E36
+    tbl%AQE_TABLE    = -1.E36
+    tbl%LTOVRC_TABLE = -1.E36
+    tbl%DILEFC_TABLE = -1.E36
+    tbl%DILEFW_TABLE = -1.E36
+    tbl%RMF25_TABLE  = -1.E36
+    tbl%SLA_TABLE    = -1.E36
+    tbl%FRAGR_TABLE  = -1.E36
+    tbl%TMIN_TABLE   = -1.E36
+    tbl%VCMX25_TABLE = -1.E36
+    tbl%TDLEF_TABLE  = -1.E36
+    tbl%BP_TABLE     = -1.E36
+    tbl%MP_TABLE     = -1.E36
+    tbl%QE25_TABLE   = -1.E36
+    tbl%RMS25_TABLE  = -1.E36
+    tbl%RMR25_TABLE  = -1.E36
+    tbl%ARM_TABLE    = -1.E36
+    tbl%FOLNMX_TABLE = -1.E36
+    tbl%WDPOOL_TABLE = -1.E36
+    tbl%WRRAT_TABLE  = -1.E36
+    tbl%MRP_TABLE    = -1.E36
+    tbl%SAIM_TABLE   = -1.E36
+    tbl%LAIM_TABLE   = -1.E36
+    tbl%SHDFAC_TABLE = -1.E36
+    tbl%NROOT_TABLE  = -1.E36
+    tbl%RGL_TABLE    = -1.E36
+    tbl%RS_TABLE     = -1.E36
+    tbl%HS_TABLE     = -1.E36
+    tbl%TOPT_TABLE   = -1.E36
+    tbl%RSMAX_TABLE  = -1.E36
+    tbl%ISURBAN_TABLE      = -99999
+    tbl%ISWATER_TABLE      = -99999
+    tbl%ISBARREN_TABLE     = -99999
+    tbl%ISICE_TABLE        = -99999
+    tbl%ISCROP_TABLE       = -99999
+    tbl%EBLFOREST_TABLE    = -99999
+    tbl%NATURAL_TABLE      = -99999
+    tbl%LCZ_1_TABLE   = -99999
+    tbl%LCZ_2_TABLE   = -99999
+    tbl%LCZ_3_TABLE   = -99999
+    tbl%LCZ_4_TABLE   = -99999
+    tbl%LCZ_5_TABLE   = -99999
+    tbl%LCZ_6_TABLE   = -99999
+    tbl%LCZ_7_TABLE   = -99999
+    tbl%LCZ_8_TABLE   = -99999
+    tbl%LCZ_9_TABLE   = -99999
+    tbl%LCZ_10_TABLE   = -99999
+    tbl%LCZ_11_TABLE   = -99999
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
@@ -468,118 +481,119 @@ CONTAINS
     endif
     close(noahowp_table_unit)
 
-       ISURBAN_TABLE   = ISURBAN
-       ISWATER_TABLE   = ISWATER
-      ISBARREN_TABLE   = ISBARREN
-         ISICE_TABLE   = ISICE
-        ISCROP_TABLE   = ISCROP
-     EBLFOREST_TABLE   = EBLFOREST
-       NATURAL_TABLE   = NATURAL
-         LCZ_1_TABLE   = LCZ_1
-         LCZ_2_TABLE   = LCZ_2
-         LCZ_3_TABLE   = LCZ_3
-         LCZ_4_TABLE   = LCZ_4
-         LCZ_5_TABLE   = LCZ_5
-         LCZ_6_TABLE   = LCZ_6
-         LCZ_7_TABLE   = LCZ_7
-         LCZ_8_TABLE   = LCZ_8
-         LCZ_9_TABLE   = LCZ_9
-         LCZ_10_TABLE  = LCZ_10
-         LCZ_11_TABLE  = LCZ_11
+       tbl%ISURBAN_TABLE   = ISURBAN
+       tbl%ISWATER_TABLE   = ISWATER
+      tbl%ISBARREN_TABLE   = ISBARREN
+         tbl%ISICE_TABLE   = ISICE
+        tbl%ISCROP_TABLE   = ISCROP
+     tbl%EBLFOREST_TABLE   = EBLFOREST
+       tbl%NATURAL_TABLE   = NATURAL
+         tbl%LCZ_1_TABLE   = LCZ_1
+         tbl%LCZ_2_TABLE   = LCZ_2
+         tbl%LCZ_3_TABLE   = LCZ_3
+         tbl%LCZ_4_TABLE   = LCZ_4
+         tbl%LCZ_5_TABLE   = LCZ_5
+         tbl%LCZ_6_TABLE   = LCZ_6
+         tbl%LCZ_7_TABLE   = LCZ_7
+         tbl%LCZ_8_TABLE   = LCZ_8
+         tbl%LCZ_9_TABLE   = LCZ_9
+         tbl%LCZ_10_TABLE  = LCZ_10
+         tbl%LCZ_11_TABLE  = LCZ_11
 
-     CH2OP_TABLE(1:NVEG)  = CH2OP(1:NVEG)
-     DLEAF_TABLE(1:NVEG)  = DLEAF(1:NVEG)
-     Z0MVT_TABLE(1:NVEG)  = Z0MVT(1:NVEG)
-       HVT_TABLE(1:NVEG)  = HVT(1:NVEG)
-       HVB_TABLE(1:NVEG)  = HVB(1:NVEG)
-       DEN_TABLE(1:NVEG)  = DEN(1:NVEG)
-        RC_TABLE(1:NVEG)  = RC(1:NVEG)
-     MFSNO_TABLE(1:NVEG)  = MFSNO(1:NVEG)
-    SCFFAC_TABLE(1:NVEG)  = SCFFAC(1:NVEG)
-        XL_TABLE(1:NVEG)  = XL(1:NVEG)
-     CWPVT_TABLE(1:NVEG)  = CWPVT(1:NVEG)
-     C3PSN_TABLE(1:NVEG)  = C3PSN(1:NVEG)
-      KC25_TABLE(1:NVEG)  = KC25(1:NVEG)
-       AKC_TABLE(1:NVEG)  = AKC(1:NVEG)
-      KO25_TABLE(1:NVEG)  = KO25(1:NVEG)
-       AKO_TABLE(1:NVEG)  = AKO(1:NVEG)
-     AVCMX_TABLE(1:NVEG)  = AVCMX(1:NVEG)
-       AQE_TABLE(1:NVEG)  = AQE(1:NVEG)
-    LTOVRC_TABLE(1:NVEG)  = LTOVRC(1:NVEG)
-    DILEFC_TABLE(1:NVEG)  = DILEFC(1:NVEG)
-    DILEFW_TABLE(1:NVEG)  = DILEFW(1:NVEG)
-     RMF25_TABLE(1:NVEG)  = RMF25(1:NVEG)
-       SLA_TABLE(1:NVEG)  = SLA(1:NVEG)
-     FRAGR_TABLE(1:NVEG)  = FRAGR(1:NVEG)
-      TMIN_TABLE(1:NVEG)  = TMIN(1:NVEG)
-    VCMX25_TABLE(1:NVEG)  = VCMX25(1:NVEG)
-     TDLEF_TABLE(1:NVEG)  = TDLEF(1:NVEG)
-        BP_TABLE(1:NVEG)  = BP(1:NVEG)
-        MP_TABLE(1:NVEG)  = MP(1:NVEG)
-      QE25_TABLE(1:NVEG)  = QE25(1:NVEG)
-     RMS25_TABLE(1:NVEG)  = RMS25(1:NVEG)
-     RMR25_TABLE(1:NVEG)  = RMR25(1:NVEG)
-       ARM_TABLE(1:NVEG)  = ARM(1:NVEG)
-    FOLNMX_TABLE(1:NVEG)  = FOLNMX(1:NVEG)
-    WDPOOL_TABLE(1:NVEG)  = WDPOOL(1:NVEG)
-     WRRAT_TABLE(1:NVEG)  = WRRAT(1:NVEG)
-       MRP_TABLE(1:NVEG)  = MRP(1:NVEG)
-    SHDFAC_TABLE(1:NVEG)  = SHDFAC(1:NVEG)
-     NROOT_TABLE(1:NVEG)  = NROOT(1:NVEG)
-       RGL_TABLE(1:NVEG)  = RGL(1:NVEG)
-        RS_TABLE(1:NVEG)  = RS(1:NVEG)
-        HS_TABLE(1:NVEG)  = HS(1:NVEG)
-      TOPT_TABLE(1:NVEG)  = TOPT(1:NVEG)
-     RSMAX_TABLE(1:NVEG)  = RSMAX(1:NVEG)
+     tbl%CH2OP_TABLE(1:NVEG)  = CH2OP(1:NVEG)
+     tbl%DLEAF_TABLE(1:NVEG)  = DLEAF(1:NVEG)
+     tbl%Z0MVT_TABLE(1:NVEG)  = Z0MVT(1:NVEG)
+       tbl%HVT_TABLE(1:NVEG)  = HVT(1:NVEG)
+       tbl%HVB_TABLE(1:NVEG)  = HVB(1:NVEG)
+       tbl%DEN_TABLE(1:NVEG)  = DEN(1:NVEG)
+        tbl%RC_TABLE(1:NVEG)  = RC(1:NVEG)
+     tbl%MFSNO_TABLE(1:NVEG)  = MFSNO(1:NVEG)
+    tbl%SCFFAC_TABLE(1:NVEG)  = SCFFAC(1:NVEG)
+        tbl%XL_TABLE(1:NVEG)  = XL(1:NVEG)
+     tbl%CWPVT_TABLE(1:NVEG)  = CWPVT(1:NVEG)
+     tbl%C3PSN_TABLE(1:NVEG)  = C3PSN(1:NVEG)
+      tbl%KC25_TABLE(1:NVEG)  = KC25(1:NVEG)
+       tbl%AKC_TABLE(1:NVEG)  = AKC(1:NVEG)
+      tbl%KO25_TABLE(1:NVEG)  = KO25(1:NVEG)
+       tbl%AKO_TABLE(1:NVEG)  = AKO(1:NVEG)
+     tbl%AVCMX_TABLE(1:NVEG)  = AVCMX(1:NVEG)
+       tbl%AQE_TABLE(1:NVEG)  = AQE(1:NVEG)
+    tbl%LTOVRC_TABLE(1:NVEG)  = LTOVRC(1:NVEG)
+    tbl%DILEFC_TABLE(1:NVEG)  = DILEFC(1:NVEG)
+    tbl%DILEFW_TABLE(1:NVEG)  = DILEFW(1:NVEG)
+     tbl%RMF25_TABLE(1:NVEG)  = RMF25(1:NVEG)
+       tbl%SLA_TABLE(1:NVEG)  = SLA(1:NVEG)
+     tbl%FRAGR_TABLE(1:NVEG)  = FRAGR(1:NVEG)
+      tbl%TMIN_TABLE(1:NVEG)  = TMIN(1:NVEG)
+    tbl%VCMX25_TABLE(1:NVEG)  = VCMX25(1:NVEG)
+     tbl%TDLEF_TABLE(1:NVEG)  = TDLEF(1:NVEG)
+        tbl%BP_TABLE(1:NVEG)  = BP(1:NVEG)
+        tbl%MP_TABLE(1:NVEG)  = MP(1:NVEG)
+      tbl%QE25_TABLE(1:NVEG)  = QE25(1:NVEG)
+     tbl%RMS25_TABLE(1:NVEG)  = RMS25(1:NVEG)
+     tbl%RMR25_TABLE(1:NVEG)  = RMR25(1:NVEG)
+       tbl%ARM_TABLE(1:NVEG)  = ARM(1:NVEG)
+    tbl%FOLNMX_TABLE(1:NVEG)  = FOLNMX(1:NVEG)
+    tbl%WDPOOL_TABLE(1:NVEG)  = WDPOOL(1:NVEG)
+     tbl%WRRAT_TABLE(1:NVEG)  = WRRAT(1:NVEG)
+       tbl%MRP_TABLE(1:NVEG)  = MRP(1:NVEG)
+    tbl%SHDFAC_TABLE(1:NVEG)  = SHDFAC(1:NVEG)
+     tbl%NROOT_TABLE(1:NVEG)  = NROOT(1:NVEG)
+       tbl%RGL_TABLE(1:NVEG)  = RGL(1:NVEG)
+        tbl%RS_TABLE(1:NVEG)  = RS(1:NVEG)
+        tbl%HS_TABLE(1:NVEG)  = HS(1:NVEG)
+      tbl%TOPT_TABLE(1:NVEG)  = TOPT(1:NVEG)
+     tbl%RSMAX_TABLE(1:NVEG)  = RSMAX(1:NVEG)
 
     ! Put LAI and SAI into 2d array from monthly lines in table; same for canopy radiation properties
 
-    SAIM_TABLE(1:NVEG, 1) = SAI_JAN(1:NVEG)
-    SAIM_TABLE(1:NVEG, 2) = SAI_FEB(1:NVEG)
-    SAIM_TABLE(1:NVEG, 3) = SAI_MAR(1:NVEG)
-    SAIM_TABLE(1:NVEG, 4) = SAI_APR(1:NVEG)
-    SAIM_TABLE(1:NVEG, 5) = SAI_MAY(1:NVEG)
-    SAIM_TABLE(1:NVEG, 6) = SAI_JUN(1:NVEG)
-    SAIM_TABLE(1:NVEG, 7) = SAI_JUL(1:NVEG)
-    SAIM_TABLE(1:NVEG, 8) = SAI_AUG(1:NVEG)
-    SAIM_TABLE(1:NVEG, 9) = SAI_SEP(1:NVEG)
-    SAIM_TABLE(1:NVEG,10) = SAI_OCT(1:NVEG)
-    SAIM_TABLE(1:NVEG,11) = SAI_NOV(1:NVEG)
-    SAIM_TABLE(1:NVEG,12) = SAI_DEC(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 1) = SAI_JAN(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 2) = SAI_FEB(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 3) = SAI_MAR(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 4) = SAI_APR(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 5) = SAI_MAY(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 6) = SAI_JUN(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 7) = SAI_JUL(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 8) = SAI_AUG(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG, 9) = SAI_SEP(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG,10) = SAI_OCT(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG,11) = SAI_NOV(1:NVEG)
+    tbl%SAIM_TABLE(1:NVEG,12) = SAI_DEC(1:NVEG)
 
-    LAIM_TABLE(1:NVEG, 1) = LAI_JAN(1:NVEG)
-    LAIM_TABLE(1:NVEG, 2) = LAI_FEB(1:NVEG)
-    LAIM_TABLE(1:NVEG, 3) = LAI_MAR(1:NVEG)
-    LAIM_TABLE(1:NVEG, 4) = LAI_APR(1:NVEG)
-    LAIM_TABLE(1:NVEG, 5) = LAI_MAY(1:NVEG)
-    LAIM_TABLE(1:NVEG, 6) = LAI_JUN(1:NVEG)
-    LAIM_TABLE(1:NVEG, 7) = LAI_JUL(1:NVEG)
-    LAIM_TABLE(1:NVEG, 8) = LAI_AUG(1:NVEG)
-    LAIM_TABLE(1:NVEG, 9) = LAI_SEP(1:NVEG)
-    LAIM_TABLE(1:NVEG,10) = LAI_OCT(1:NVEG)
-    LAIM_TABLE(1:NVEG,11) = LAI_NOV(1:NVEG)
-    LAIM_TABLE(1:NVEG,12) = LAI_DEC(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 1) = LAI_JAN(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 2) = LAI_FEB(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 3) = LAI_MAR(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 4) = LAI_APR(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 5) = LAI_MAY(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 6) = LAI_JUN(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 7) = LAI_JUL(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 8) = LAI_AUG(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG, 9) = LAI_SEP(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG,10) = LAI_OCT(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG,11) = LAI_NOV(1:NVEG)
+    tbl%LAIM_TABLE(1:NVEG,12) = LAI_DEC(1:NVEG)
 
-    RHOL_TABLE(1:NVEG,1)  = RHOL_VIS(1:NVEG) !leaf reflectance: 1=vis, 2=nir
-    RHOL_TABLE(1:NVEG,2)  = RHOL_NIR(1:NVEG) !leaf reflectance: 1=vis, 2=nir
-    RHOS_TABLE(1:NVEG,1)  = RHOS_VIS(1:NVEG) !stem reflectance: 1=vis, 2=nir
-    RHOS_TABLE(1:NVEG,2)  = RHOS_NIR(1:NVEG) !stem reflectance: 1=vis, 2=nir
-    TAUL_TABLE(1:NVEG,1)  = TAUL_VIS(1:NVEG) !leaf transmittance: 1=vis, 2=nir
-    TAUL_TABLE(1:NVEG,2)  = TAUL_NIR(1:NVEG) !leaf transmittance: 1=vis, 2=nir
-    TAUS_TABLE(1:NVEG,1)  = TAUS_VIS(1:NVEG) !stem transmittance: 1=vis, 2=nir
-    TAUS_TABLE(1:NVEG,2)  = TAUS_NIR(1:NVEG) !stem transmittance: 1=vis, 2=nir
+    tbl%RHOL_TABLE(1:NVEG,1)  = RHOL_VIS(1:NVEG) !leaf reflectance: 1=vis, 2=nir
+    tbl%RHOL_TABLE(1:NVEG,2)  = RHOL_NIR(1:NVEG) !leaf reflectance: 1=vis, 2=nir
+    tbl%RHOS_TABLE(1:NVEG,1)  = RHOS_VIS(1:NVEG) !stem reflectance: 1=vis, 2=nir
+    tbl%RHOS_TABLE(1:NVEG,2)  = RHOS_NIR(1:NVEG) !stem reflectance: 1=vis, 2=nir
+    tbl%TAUL_TABLE(1:NVEG,1)  = TAUL_VIS(1:NVEG) !leaf transmittance: 1=vis, 2=nir
+    tbl%TAUL_TABLE(1:NVEG,2)  = TAUL_NIR(1:NVEG) !leaf transmittance: 1=vis, 2=nir
+    tbl%TAUS_TABLE(1:NVEG,1)  = TAUS_VIS(1:NVEG) !stem transmittance: 1=vis, 2=nir
+    tbl%TAUS_TABLE(1:NVEG,2)  = TAUS_NIR(1:NVEG) !stem transmittance: 1=vis, 2=nir
 
   END SUBROUTINE read_veg_parameters
 
-  SUBROUTINE read_soil_parameters(param_dir, soil_table, general_table, soil_class_name)
+  SUBROUTINE read_soil_parameters(tbl, param_dir, soil_table, general_table, soil_class_name)
     implicit none
+    type(parameters_table_type), intent(inout) :: tbl
     character(len=*), intent(in) :: param_dir
     character(len=*), intent(in) :: soil_table
     character(len=*), intent(in) :: general_table
     character(len=*), intent(in) :: soil_class_name
     integer             :: IERR
     character(len=20)   :: SLTYPE
-    integer             :: ITMP, NUM_SLOPE, LC
+    integer             :: ITMP, NUM_SLOPE, LC, SLCATS
     integer             :: iLine               ! loop index
     character(len=256)  :: message
     logical             :: file_named
@@ -588,30 +602,30 @@ CONTAINS
 
 
     ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-       BEXP_TABLE = -1.E36
-     SMCDRY_TABLE = -1.E36
-         F1_TABLE = -1.E36
-     SMCMAX_TABLE = -1.E36
-     SMCREF_TABLE = -1.E36
-     PSISAT_TABLE = -1.E36
-      DKSAT_TABLE = -1.E36
-      DWSAT_TABLE = -1.E36
-     SMCWLT_TABLE = -1.E36
-     QUARTZ_TABLE = -1.E36
-      SLOPE_TABLE = -1.E36
-      CSOIL_TABLE = -1.E36
-      REFDK_TABLE = -1.E36
-     REFKDT_TABLE = -1.E36
-       FRZK_TABLE = -1.E36
-       ZBOT_TABLE = -1.E36
-       CZIL_TABLE = -1.E36
-       BVIC_TABLE = -1.E36
-       AXAJ_TABLE = -1.E36
-       BXAJ_TABLE = -1.E36
-       XXAJ_TABLE = -1.E36
-      BDVIC_TABLE = -1.E36
-      GDVIC_TABLE = -1.E36
-      BBVIC_TABLE = -1.E36
+       tbl%BEXP_TABLE = -1.E36
+     tbl%SMCDRY_TABLE = -1.E36
+         tbl%F1_TABLE = -1.E36
+     tbl%SMCMAX_TABLE = -1.E36
+     tbl%SMCREF_TABLE = -1.E36
+     tbl%PSISAT_TABLE = -1.E36
+      tbl%DKSAT_TABLE = -1.E36
+      tbl%DWSAT_TABLE = -1.E36
+     tbl%SMCWLT_TABLE = -1.E36
+     tbl%QUARTZ_TABLE = -1.E36
+      tbl%SLOPE_TABLE = -1.E36
+      tbl%CSOIL_TABLE = -1.E36
+      tbl%REFDK_TABLE = -1.E36
+     tbl%REFKDT_TABLE = -1.E36
+       tbl%FRZK_TABLE = -1.E36
+       tbl%ZBOT_TABLE = -1.E36
+       tbl%CZIL_TABLE = -1.E36
+       tbl%BVIC_TABLE = -1.E36
+       tbl%AXAJ_TABLE = -1.E36
+       tbl%BXAJ_TABLE = -1.E36
+       tbl%XXAJ_TABLE = -1.E36
+      tbl%BDVIC_TABLE = -1.E36
+      tbl%GDVIC_TABLE = -1.E36
+      tbl%BBVIC_TABLE = -1.E36
 
 !
 !-----READ IN SOIL PROPERTIES FROM SOILPARM.TBL
@@ -641,10 +655,10 @@ CONTAINS
     !CALL wrf_message ( message )
 
     DO LC=1,SLCATS
-      READ (soil_table_unit,*) ITMP,BEXP_TABLE(LC),SMCDRY_TABLE(LC),F1_TABLE(LC),SMCMAX_TABLE(LC),   &
-                  SMCREF_TABLE(LC),PSISAT_TABLE(LC),DKSAT_TABLE(LC), DWSAT_TABLE(LC),   &
-                  SMCWLT_TABLE(LC), QUARTZ_TABLE(LC),BVIC_TABLE(LC), AXAJ_TABLE(LC),    &
-                  BXAJ_TABLE(LC),XXAJ_TABLE(LC),BDVIC_TABLE(LC),BBVIC_TABLE(LC),GDVIC_TABLE(LC)
+      READ (soil_table_unit,*) ITMP,tbl%BEXP_TABLE(LC),tbl%SMCDRY_TABLE(LC),tbl%F1_TABLE(LC),tbl%SMCMAX_TABLE(LC),   &
+                  tbl%SMCREF_TABLE(LC),tbl%PSISAT_TABLE(LC),tbl%DKSAT_TABLE(LC), tbl%DWSAT_TABLE(LC),   &
+                  tbl%SMCWLT_TABLE(LC), tbl%QUARTZ_TABLE(LC),tbl%BVIC_TABLE(LC), tbl%AXAJ_TABLE(LC),    &
+                  tbl%BXAJ_TABLE(LC),tbl%XXAJ_TABLE(LC),tbl%BDVIC_TABLE(LC),tbl%BBVIC_TABLE(LC),tbl%GDVIC_TABLE(LC)
     ENDDO
 
     CLOSE (soil_table_unit)
@@ -669,7 +683,7 @@ CONTAINS
     read (general_table_unit,*) NUM_SLOPE
 
     do LC=1,NUM_SLOPE
-       read (general_table_unit,*) SLOPE_TABLE(LC)
+       read (general_table_unit,*) tbl%SLOPE_TABLE(LC)
     end do
 
     read (general_table_unit,*)
@@ -677,35 +691,36 @@ CONTAINS
     read (general_table_unit,*)
     read (general_table_unit,*)
     read (general_table_unit,*)
-    read (general_table_unit,*) CSOIL_TABLE
+    read (general_table_unit,*) tbl%CSOIL_TABLE
     read (general_table_unit,*)
     read (general_table_unit,*)
     read (general_table_unit,*)
-    read (general_table_unit,*) REFDK_TABLE
+    read (general_table_unit,*) tbl%REFDK_TABLE
     read (general_table_unit,*)
-    read (general_table_unit,*) REFKDT_TABLE
+    read (general_table_unit,*) tbl%REFKDT_TABLE
     read (general_table_unit,*)
-    read (general_table_unit,*) FRZK_TABLE
+    read (general_table_unit,*) tbl%FRZK_TABLE
     read (general_table_unit,*)
-    read (general_table_unit,*) ZBOT_TABLE
+    read (general_table_unit,*) tbl%ZBOT_TABLE
     read (general_table_unit,*)
-    read (general_table_unit,*) CZIL_TABLE
-    read (general_table_unit,*)
-    read (general_table_unit,*)
+    read (general_table_unit,*) tbl%CZIL_TABLE
     read (general_table_unit,*)
     read (general_table_unit,*)
     read (general_table_unit,*)
     read (general_table_unit,*)
     read (general_table_unit,*)
-    read (general_table_unit,*) Z0_TABLE
+    read (general_table_unit,*)
+    read (general_table_unit,*)
+    read (general_table_unit,*) tbl%Z0_TABLE
 
     close (general_table_unit)
 
   END SUBROUTINE read_soil_parameters
 
 
-  SUBROUTINE read_rad_parameters(param_dir, noahowp_table)
+  SUBROUTINE read_rad_parameters(tbl, param_dir, noahowp_table)
     implicit none
+    type(parameters_table_type), intent(inout) :: tbl
     character(len=*), intent(in) :: param_dir
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
@@ -721,14 +736,14 @@ CONTAINS
     namelist / rad_parameters / ALBSAT_VIS,ALBSAT_NIR,ALBDRY_VIS,ALBDRY_NIR,ALBICE,ALBLAK,OMEGAS,BETADS,BETAIS,EG
 
     ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-    ALBSAT_TABLE     = -1.E36
-    ALBDRY_TABLE     = -1.E36
-    ALBICE_TABLE     = -1.E36
-    ALBLAK_TABLE     = -1.E36
-    OMEGAS_TABLE     = -1.E36
-    BETADS_TABLE     = -1.E36
-    BETAIS_TABLE     = -1.E36
-    EG_TABLE         = -1.E36
+    tbl%ALBSAT_TABLE     = -1.E36
+    tbl%ALBDRY_TABLE     = -1.E36
+    tbl%ALBICE_TABLE     = -1.E36
+    tbl%ALBLAK_TABLE     = -1.E36
+    tbl%OMEGAS_TABLE     = -1.E36
+    tbl%BETADS_TABLE     = -1.E36
+    tbl%BETAIS_TABLE     = -1.E36
+    tbl%EG_TABLE         = -1.E36
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
@@ -745,21 +760,22 @@ CONTAINS
     read(noahowp_table_unit,rad_parameters)
     close(noahowp_table_unit)
 
-    ALBSAT_TABLE(:,1) = ALBSAT_VIS ! saturated soil albedos: 1=vis, 2=nir
-    ALBSAT_TABLE(:,2) = ALBSAT_NIR ! saturated soil albedos: 1=vis, 2=nir
-    ALBDRY_TABLE(:,1) = ALBDRY_VIS ! dry soil albedos: 1=vis, 2=nir
-    ALBDRY_TABLE(:,2) = ALBDRY_NIR ! dry soil albedos: 1=vis, 2=nir
-    ALBICE_TABLE      = ALBICE
-    ALBLAK_TABLE      = ALBLAK
-    OMEGAS_TABLE      = OMEGAS
-    BETADS_TABLE      = BETADS
-    BETAIS_TABLE      = BETAIS
-    EG_TABLE          = EG
+    tbl%ALBSAT_TABLE(:,1) = ALBSAT_VIS ! saturated soil albedos: 1=vis, 2=nir
+    tbl%ALBSAT_TABLE(:,2) = ALBSAT_NIR ! saturated soil albedos: 1=vis, 2=nir
+    tbl%ALBDRY_TABLE(:,1) = ALBDRY_VIS ! dry soil albedos: 1=vis, 2=nir
+    tbl%ALBDRY_TABLE(:,2) = ALBDRY_NIR ! dry soil albedos: 1=vis, 2=nir
+    tbl%ALBICE_TABLE      = ALBICE
+    tbl%ALBLAK_TABLE      = ALBLAK
+    tbl%OMEGAS_TABLE      = OMEGAS
+    tbl%BETADS_TABLE      = BETADS
+    tbl%BETAIS_TABLE      = BETAIS
+    tbl%EG_TABLE          = EG
 
   end subroutine read_rad_parameters
 
-  subroutine read_global_parameters(param_dir, noahowp_table)
+  subroutine read_global_parameters(tbl, param_dir, noahowp_table)
     implicit none
+    type(parameters_table_type), intent(inout) :: tbl
     character(len=*), intent(in) :: param_dir
     character(len=*), intent(in) :: noahowp_table
     integer                      :: ierr
@@ -778,28 +794,28 @@ CONTAINS
 
 
     ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
-           CO2_TABLE     = -1.E36
-            O2_TABLE     = -1.E36
-        TIMEAN_TABLE     = -1.E36
-        FSATMX_TABLE     = -1.E36
-         Z0SNO_TABLE     = -1.E36
-           SSI_TABLE     = -1.E36
-    SNOW_RET_FAC_TABLE   = -1.E36
-       SNOW_EMIS_TABLE   = -1.E36
-           SWEMX_TABLE   = -1.E36
-            TAU0_TABLE   = -1.E36
-    GRAIN_GROWTH_TABLE   = -1.E36
-    EXTRA_GROWTH_TABLE   = -1.E36
-       DIRT_SOOT_TABLE   = -1.E36
-       BATS_COSZ_TABLE   = -1.E36
-    BATS_VIS_NEW_TABLE   = -1.E36
-    BATS_NIR_NEW_TABLE   = -1.E36
-    BATS_VIS_AGE_TABLE   = -1.E36
-    BATS_NIR_AGE_TABLE   = -1.E36
-    BATS_VIS_DIR_TABLE   = -1.E36
-    BATS_NIR_DIR_TABLE   = -1.E36
-    RSURF_SNOW_TABLE     = -1.E36
-     RSURF_EXP_TABLE     = -1.E36
+           tbl%CO2_TABLE     = -1.E36
+            tbl%O2_TABLE     = -1.E36
+        tbl%TIMEAN_TABLE     = -1.E36
+        tbl%FSATMX_TABLE     = -1.E36
+         tbl%Z0SNO_TABLE     = -1.E36
+           tbl%SSI_TABLE     = -1.E36
+    tbl%SNOW_RET_FAC_TABLE   = -1.E36
+       tbl%SNOW_EMIS_TABLE   = -1.E36
+           tbl%SWEMX_TABLE   = -1.E36
+            tbl%TAU0_TABLE   = -1.E36
+    tbl%GRAIN_GROWTH_TABLE   = -1.E36
+    tbl%EXTRA_GROWTH_TABLE   = -1.E36
+       tbl%DIRT_SOOT_TABLE   = -1.E36
+       tbl%BATS_COSZ_TABLE   = -1.E36
+    tbl%BATS_VIS_NEW_TABLE   = -1.E36
+    tbl%BATS_NIR_NEW_TABLE   = -1.E36
+    tbl%BATS_VIS_AGE_TABLE   = -1.E36
+    tbl%BATS_NIR_AGE_TABLE   = -1.E36
+    tbl%BATS_VIS_DIR_TABLE   = -1.E36
+    tbl%BATS_NIR_DIR_TABLE   = -1.E36
+    tbl%RSURF_SNOW_TABLE     = -1.E36
+     tbl%RSURF_EXP_TABLE     = -1.E36
 
     inquire( file=trim(param_dir)//'/'//trim(noahowp_table), exist=file_named )
     if ( file_named ) then
@@ -816,28 +832,28 @@ CONTAINS
     read(noahowp_table_unit,global_parameters)
     close(noahowp_table_unit)
 
-           CO2_TABLE     = CO2
-            O2_TABLE     = O2
-        TIMEAN_TABLE     = TIMEAN
-        FSATMX_TABLE     = FSATMX
-         Z0SNO_TABLE     = Z0SNO
-           SSI_TABLE     = SSI
-    SNOW_RET_FAC_TABLE   = SNOW_RET_FAC
-       SNOW_EMIS_TABLE   = SNOW_EMIS
-         SWEMX_TABLE     = SWEMX
-            TAU0_TABLE   = TAU0
-    GRAIN_GROWTH_TABLE   = GRAIN_GROWTH
-    EXTRA_GROWTH_TABLE   = EXTRA_GROWTH
-       DIRT_SOOT_TABLE   = DIRT_SOOT
-       BATS_COSZ_TABLE   = BATS_COSZ
-    BATS_VIS_NEW_TABLE   = BATS_VIS_NEW
-    BATS_NIR_NEW_TABLE   = BATS_NIR_NEW
-    BATS_VIS_AGE_TABLE   = BATS_VIS_AGE
-    BATS_NIR_AGE_TABLE   = BATS_NIR_AGE
-    BATS_VIS_DIR_TABLE   = BATS_VIS_DIR
-    BATS_NIR_DIR_TABLE   = BATS_NIR_DIR
-    RSURF_SNOW_TABLE     = RSURF_SNOW
-     RSURF_EXP_TABLE     = RSURF_EXP
+           tbl%CO2_TABLE     = CO2
+            tbl%O2_TABLE     = O2
+        tbl%TIMEAN_TABLE     = TIMEAN
+        tbl%FSATMX_TABLE     = FSATMX
+         tbl%Z0SNO_TABLE     = Z0SNO
+           tbl%SSI_TABLE     = SSI
+    tbl%SNOW_RET_FAC_TABLE   = SNOW_RET_FAC
+       tbl%SNOW_EMIS_TABLE   = SNOW_EMIS
+         tbl%SWEMX_TABLE     = SWEMX
+            tbl%TAU0_TABLE   = TAU0
+    tbl%GRAIN_GROWTH_TABLE   = GRAIN_GROWTH
+    tbl%EXTRA_GROWTH_TABLE   = EXTRA_GROWTH
+       tbl%DIRT_SOOT_TABLE   = DIRT_SOOT
+       tbl%BATS_COSZ_TABLE   = BATS_COSZ
+    tbl%BATS_VIS_NEW_TABLE   = BATS_VIS_NEW
+    tbl%BATS_NIR_NEW_TABLE   = BATS_NIR_NEW
+    tbl%BATS_VIS_AGE_TABLE   = BATS_VIS_AGE
+    tbl%BATS_NIR_AGE_TABLE   = BATS_NIR_AGE
+    tbl%BATS_VIS_DIR_TABLE   = BATS_VIS_DIR
+    tbl%BATS_NIR_DIR_TABLE   = BATS_NIR_DIR
+    tbl%RSURF_SNOW_TABLE     = RSURF_SNOW
+     tbl%RSURF_EXP_TABLE     = RSURF_EXP
 
   END SUBROUTINE read_global_parameters
 
