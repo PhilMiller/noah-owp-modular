@@ -99,10 +99,45 @@ module bminoahowp
   ! Exchange items
   integer, parameter :: input_item_count = 8
   integer, parameter :: output_item_count = 23
-  character (len=BMI_MAX_VAR_NAME), target, &
-       dimension(input_item_count) :: input_items
-  character (len=BMI_MAX_VAR_NAME), target, &
-       dimension(output_item_count) :: output_items 
+  ! Initialized here rather than on each query: these never change, so
+  ! sharing one read-only copy keeps concurrent callers off each other.
+  character (len=BMI_MAX_VAR_NAME), target :: input_items(input_item_count) = &
+       [ character(len=BMI_MAX_VAR_NAME) ::  &
+         'SFCPRS'    & ! surface pressure (Pa)
+       , 'SFCTMP'    & ! surface air temperature (K)
+       , 'SOLDN'     & ! incoming shortwave radiation (W/m2)
+       , 'LWDN'      & ! incoming longwave radiation (W/m2)
+       , 'UU'        & ! wind speed in eastward direction (m/s)
+       , 'VV'        & ! wind speed in northward direction (m/s)
+       , 'Q2'        & ! mixing ratio (kg/kg)
+       , 'PRCPNONC'  & ! precipitation rate (mm/s)
+       ]
+  character (len=BMI_MAX_VAR_NAME), target :: output_items(output_item_count) = &
+       [ character(len=BMI_MAX_VAR_NAME) ::  &
+         'QINSUR'      & ! total liquid water input to surface rate (m/s)
+       , 'ETRAN'       & ! transpiration rate (mm)
+       , 'QSEVA'       & ! evaporation rate (mm/s)
+       , 'EVAPOTRANS'  & ! evapotranspiration rate (m/s)
+       , 'TG'          & ! surface/ground temperature (K) (becomes snow surface temperature when snow is present)
+       , 'SNEQV'       & ! snow water equivalent (mm)
+       , 'TGS'         & ! ground temperature (K) (is equal to TG when no snow and equal to bottom snow element temperature when there is snow)
+       , 'ACSNOM'      & ! Accumulated meltwater from bottom snow layer (mm) (NWM 3.0 output variable)
+       , 'SNOWT_AVG'   & ! Average snow temperature (K) (by layer mass) (NWM 3.0 output variable)
+       , 'ISNOW'       & ! Number of snow layers (unitless) (NWM 3.0 output variable)
+       , 'QRAIN'       & ! Rainfall rate on the ground (mm/s) (NWM 3.0 output variable)
+       , 'FSNO'        & ! Snow-cover fraction on the ground (unitless fraction) (NWM 3.0 output variable)
+       , 'SNOWH'       & ! Snow depth (m) (NWM 3.0 output variable)
+       , 'SNLIQ'       & ! Snow layer liquid water (mm) (NWM 3.0 output variable)
+       , 'QSNOW'       & ! Snowfall rate on the ground (mm/s) (NWM 3.0 output variable)
+       , 'ECAN'        & ! evaporation of intercepted water (mm) (NWM 3.0 output variable)
+       , 'GH'          & ! Heat flux into the soil (W/m-2) (NWM 3.0 output variable)
+       , 'TRAD'        & ! Surface radiative temperature (K) (NWM 3.0 output variable)
+       , 'FSA'         & ! Total absorbed SW radiation (W/m-2) (NWM 3.0 output variable)
+       , 'CMC'         & ! Total canopy water (liquid + ice) (mm) (NWM 3.0 output variable)
+       , 'LH'          & ! Total latent heat to the atmosphere (W/m-2) (NWM 3.0 output variable)
+       , 'FIRA'        & ! Total net LW radiation to atmosphere (W/m-2) (NWM 3.0 output variable)
+       , 'FSH'         & ! Total sensible heat to the atmosphere (W/m-2) (NWM 3.0 output variable)
+       ]
 
 contains
 
@@ -142,15 +177,6 @@ contains
     character (*), pointer, intent(out) :: names(:)
     integer :: bmi_status
 
-    input_items(1) = 'SFCPRS'   ! surface pressure (Pa)
-    input_items(2) = 'SFCTMP'   ! surface air temperature (K)
-    input_items(3) = 'SOLDN'    ! incoming shortwave radiation (W/m2)
-    input_items(4) = 'LWDN'     ! incoming longwave radiation (W/m2)
-    input_items(5) = 'UU'       ! wind speed in eastward direction (m/s)
-    input_items(6) = 'VV'       ! wind speed in northward direction (m/s)
-    input_items(7) = 'Q2'       ! mixing ratio (kg/kg)
-    input_items(8) = 'PRCPNONC' ! precipitation rate (mm/s)
-    
     names => input_items
     bmi_status = BMI_SUCCESS
   end function noahowp_input_var_names
@@ -160,30 +186,6 @@ contains
     class (bmi_noahowp), intent(in) :: this
     character (*), pointer, intent(out) :: names(:)
     integer :: bmi_status
-
-    output_items(1) = 'QINSUR'     ! total liquid water input to surface rate (m/s)
-    output_items(2) = 'ETRAN'      ! transpiration rate (mm)
-    output_items(3) = 'QSEVA'      ! evaporation rate (mm/s)
-    output_items(4) = 'EVAPOTRANS' ! evapotranspiration rate (m/s)
-    output_items(5) = 'TG'         ! surface/ground temperature (K) (becomes snow surface temperature when snow is present)
-    output_items(6) = 'SNEQV'      ! snow water equivalent (mm)
-    output_items(7) = 'TGS'        ! ground temperature (K) (is equal to TG when no snow and equal to bottom snow element temperature when there is snow)
-    output_items(8) = 'ACSNOM'     ! Accumulated meltwater from bottom snow layer (mm) (NWM 3.0 output variable)
-    output_items(9) = 'SNOWT_AVG'  ! Average snow temperature (K) (by layer mass) (NWM 3.0 output variable)
-    output_items(10) = 'ISNOW'     ! Number of snow layers (unitless) (NWM 3.0 output variable)
-    output_items(11) = 'QRAIN'     ! Rainfall rate on the ground (mm/s) (NWM 3.0 output variable)
-    output_items(12) = 'FSNO'      ! Snow-cover fraction on the ground (unitless fraction) (NWM 3.0 output variable)
-    output_items(13) = 'SNOWH'     ! Snow depth (m) (NWM 3.0 output variable)
-    output_items(14) = 'SNLIQ'     ! Snow layer liquid water (mm) (NWM 3.0 output variable)
-    output_items(15) = 'QSNOW'     ! Snowfall rate on the ground (mm/s) (NWM 3.0 output variable)
-    output_items(16) = 'ECAN'      ! evaporation of intercepted water (mm) (NWM 3.0 output variable)
-    output_items(17) = 'GH'        ! Heat flux into the soil (W/m-2) (NWM 3.0 output variable)
-    output_items(18) = 'TRAD'      ! Surface radiative temperature (K) (NWM 3.0 output variable)
-    output_items(19) = 'FSA'       ! Total absorbed SW radiation (W/m-2) (NWM 3.0 output variable)
-    output_items(20) = 'CMC'       ! Total canopy water (liquid + ice) (mm) (NWM 3.0 output variable)
-    output_items(21) = 'LH'        ! Total latent heat to the atmosphere (W/m-2) (NWM 3.0 output variable)
-    output_items(22) = 'FIRA'      ! Total net LW radiation to atmosphere (W/m-2) (NWM 3.0 output variable)
-    output_items(23) = 'FSH'       ! Total sensible heat to the atmosphere (W/m-2) (NWM 3.0 output variable)
 
     names => output_items
     bmi_status = BMI_SUCCESS
